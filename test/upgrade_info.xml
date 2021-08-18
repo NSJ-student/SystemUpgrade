@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<list>
+	<libs>
+	  <lib>libgtk-3-dev_3.22.30-1ubuntu4_arm64.deb</lib>
+	  <size>896744</size>
+	</libs>
+	<libs>
+	  <lib>libvlc_R32_5.tar</lib>
+	  <size>85504000</size>
+	</libs>
+	
+	<cmds>
+  	<cmd>ls -alt</cmd>
+  	<sudo>true</sudo>
+	</cmds>
+	<cmds>
+  	<cmd>sudo su</cmd>
+  	<sudo>true</sudo>
+	</cmds>
+	<cmds>
+  	<cmd>rm -r test</cmd>
+	</cmds>
+	<cmds>
+  	<cmd>mkdir test</cmd>
+	</cmds>
+</list>
