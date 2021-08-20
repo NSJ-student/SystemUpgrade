@@ -60,7 +60,7 @@
                     </GridView>
                 </ListView.View>
             </ListView>
-            <TextBox x:Name="txtSshLog" FontFamily="Consolas" Grid.Column="1" Grid.Row="2" Grid.RowSpan="2" Margin="5,0,0,5" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" HorizontalAlignment="Left"></TextBox>
+            <TextBox x:Name="txtSshLog" FontFamily="Consolas" Grid.Column="1" Grid.Row="2" Grid.RowSpan="2" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" Margin="5,0,0,5"/>
             <ListView x:Name="listRemoteFile" Grid.Row="4" Grid.Column="1" Margin="5,5,0,0">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
@@ -102,7 +102,17 @@
                 </Grid.ColumnDefinitions>
                 <ProgressBar x:Name="progressStatus" Margin="0,3" Height="20" Grid.Column="1" Grid.ColumnSpan="2"/>
                 <Label Content="Progress :" RenderTransformOrigin="0.615,0"/>
-                <TextBox x:Name="txtProgressLog" Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10,0,0" FontFamily="Consolas" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True"/>
+                <RichTextBox x:Name="txtProgressLog" 
+                             Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10,0,0" 
+                             FontFamily="Consolas" IsReadOnly="True" 
+                             HorizontalScrollBarVisibility="Auto" 
+                             VerticalScrollBarVisibility="Auto" 
+                             ScrollViewer.CanContentScroll="True">
+                    <FlowDocument LineHeight="5" MinPageWidth="1000">
+                        <Paragraph>
+                        </Paragraph>
+                    </FlowDocument>
+                </RichTextBox>
                 <Label x:Name="lblLocalPath" Content="./" Grid.Row="1" VerticalAlignment="Center" Grid.Column="1"/>
                 <Label Content="Path :" HorizontalAlignment="Left" Margin="0" Grid.Row="1" VerticalAlignment="Center"/>
             </Grid>

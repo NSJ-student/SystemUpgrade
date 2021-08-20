@@ -38,13 +38,18 @@ namespace SystemUpgrade
         Thread uploadThread;
         Thread connectThread;
         ulong uploadFileLength;
-        bool uploadActive;
 
         // for SSH command
+        List<UserCommand> listSshCommand_Pre;
         List<UserCommand> listSshCommand;
         SshClient m_sshCommand;
         ShellStream m_sshShell;
+        Thread sshRecvthread;
         Thread sshCommandthread;
+
+        static Regex prompt = new Regex("[a-zA-Z0-9_.-]*\\@[a-zA-Z0-9_.-]*\\:\\~[#$] ", RegexOptions.Compiled);
+        static Regex pwdPrompt = new Regex("password for .*\\:", RegexOptions.Compiled);
+        static Regex promptOrPwd = new Regex(prompt + "|" + pwdPrompt);
 
         public MainWindow()
         {
@@ -58,11 +63,11 @@ namespace SystemUpgrade
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "nvidia"));
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "roqkfdmfwkfgkwk!"));
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "roqkfdmfwkfgkwk!"));
-            listConnInfo.Add(new UserConnInfo("192.168.0.100", "sujin", "aprtmdnpf05!"));
+            listConnInfo.Add(new UserConnInfo("192.168.0.100",  "sujin", "aprtmdnpf05!"));
 
             listTxRxFile = new List<UserTxRxInfo>();
-            uploadActive = false;
 
+            listSshCommand_Pre = new List<UserCommand>();
             listSshCommand = new List<UserCommand>();
 
             DeactivateUI();
@@ -73,19 +78,30 @@ namespace SystemUpgrade
         /**************************/
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
+
             if(((m_sftpClient!=null) && m_sftpClient.IsConnected) &&
                 ((m_sshCommand != null) && m_sshCommand.IsConnected))
             {
                 m_sshCommand.Disconnect();
                 m_sftpClient.Disconnect();
-                if(connectThread.IsAlive)
+
+                if (connectThread != null && connectThread.IsAlive)
                 {
                     connectThread.Abort();
                 }
-                if(sshCommandthread.IsAlive)
+                if (sshRecvthread != null && sshRecvthread.IsAlive)
+                {
+                    sshRecvthread.Abort();
+                }
+                if (sshCommandthread != null && sshCommandthread.IsAlive)
                 {
                     sshCommandthread.Abort();
                 }
+                if (uploadThread != null && uploadThread.IsAlive)
+                {
+                    uploadThread.Abort();
+                }
+
                 DeactivateUI();
             }
             else
@@ -148,30 +164,29 @@ namespace SystemUpgrade
         {
             if ((m_sshCommand != null) && (m_sshCommand.IsConnected))
             {
-                foreach (UserCommand cmd in listSshCommand)
+                updateProgressLog_UI("(pre-process) execute user command", "Green");
+
+                foreach (UserCommand cmd in listSshCommand_Pre)
                 {
-                    if(cmd.IsSudo)
+                    m_sshShell.WriteLine(cmd.Cmd);
+                    updateProgressLog_UI(String.Format("  {0}", cmd.Cmd), "Black");
+
+                    if (cmd.IsSudo)
                     {
-                        m_sshShell.WriteLine(cmd.Cmd);
-                        string output = m_sshShell.Expect("");
-                        txtSshLog.AppendText(output);
-                        m_sshShell.WriteLine(currentConnInfo.Password);
+                        Thread.Sleep(500);
                     }
                     else
                     {
-                        m_sshShell.WriteLine(cmd.Cmd);
+                        Thread.Sleep(100);
                     }
                 }
-            }
-            else
-            {
-                DeactivateUI();
-                return;
+
+                updateProgressLog_UI("pre-process --> Done!!", "Green");
             }
 
             if ((m_sftpClient != null) & (m_sftpClient.IsConnected))
             {
-                if (uploadActive)
+                if ((connectThread != null) && connectThread.IsAlive)
                 {
                     return;
                 }
@@ -208,6 +223,7 @@ namespace SystemUpgrade
             stackButtons.IsEnabled = false;
             listTxRxFile.Clear();
             listSshCommand.Clear();
+            listSshCommand_Pre.Clear();
 
             List<UserFileInfo> user_Items = new List<UserFileInfo>();
             listLocalFile.ItemsSource = user_Items;
@@ -318,6 +334,29 @@ namespace SystemUpgrade
                         }
                     }
 
+                    // get command list
+                    var precmd_elements = xdoc.Root.Elements("pre_cmds");
+                    listSshCommand_Pre.Clear();
+                    foreach (var xList in precmd_elements)
+                    {
+                        XElement cmd_element = xList.Element("cmd");
+                        if (cmd_element == null)
+                        {
+                            continue;
+                        }
+
+                        XElement sudo_element = xList.Element("sudo");
+                        if (sudo_element != null)
+                        {
+                            bool sudo = Convert.ToBoolean(sudo_element.Value);
+                            listSshCommand_Pre.Add(new UserCommand(cmd_element.Value, sudo));
+                        }
+                        else
+                        {
+                            listSshCommand_Pre.Add(new UserCommand(cmd_element.Value, false));
+                        }
+                    }
+
                     return (file_not_exists == 0);
                 }
             }
@@ -376,6 +415,24 @@ namespace SystemUpgrade
                 return false;
             }
         }
+        private void updateProgressLog(string text, string color)
+        {
+            Dispatcher.Invoke(new Action(delegate () {
+                string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + text + Environment.NewLine;
+                TextRange tr = new TextRange(txtProgressLog.Document.ContentEnd, txtProgressLog.Document.ContentEnd);
+                tr.Text = new_text;
+                tr.ApplyPropertyValue(TextElement.ForegroundProperty, color);
+                txtProgressLog.ScrollToEnd();
+            }));
+        }
+        private void updateProgressLog_UI(string text, string color)
+        {
+            string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + text + Environment.NewLine;
+            TextRange tr = new TextRange(txtProgressLog.Document.ContentEnd, txtProgressLog.Document.ContentEnd);
+            tr.Text = new_text;
+            tr.ApplyPropertyValue(TextElement.ForegroundProperty, color);
+            txtProgressLog.ScrollToEnd();
+        }
 
         /**************************/
         //       Thread
@@ -405,14 +462,14 @@ namespace SystemUpgrade
                     {
                         m_sshShell = m_sshCommand.CreateShellStream("vt100", 80, 60, 800, 600, 65536);
 
-                        if((sshCommandthread != null) && (sshCommandthread.IsAlive))
+                        if((sshRecvthread != null) && (sshRecvthread.IsAlive))
                         {
                             Dispatcher.Invoke(new Action(delegate () { StartStopWait(false); }));
                             return;
                         }
-                        sshCommandthread = new Thread(() => recvCommSSHData());
-                        sshCommandthread.IsBackground = true;
-                        sshCommandthread.Start();
+                        sshRecvthread = new Thread(() => recvCommSSHData());
+                        sshRecvthread.IsBackground = true;
+                        sshRecvthread.Start();
 
                         Dispatcher.Invoke(new Action(delegate () { btnConnect.Content = "Close"; }));
                     }
@@ -440,13 +497,13 @@ namespace SystemUpgrade
         }
         private void uploadThreadFunc()
         {
-            uploadActive = true;
             try
             {
                 int loop_count = listTxRxFile.Count;
                 bool retry = false;
                 do
                 {
+                    updateProgressLog(String.Format("upload {0} files", listTxRxFile.Count), "Green");
                     loop_count = listTxRxFile.Count;
                     retry = false;
                     foreach (UserTxRxInfo item in listTxRxFile)
@@ -457,18 +514,12 @@ namespace SystemUpgrade
                             string remotePath = item.RemotePath;
                             Stream fileStream = new FileStream(localPath, FileMode.Open);
 
-                            Dispatcher.Invoke(new Action(delegate () {
-                                txtProgressLog.AppendText("uploading [" + localPath + "]\r\n");
-                                txtProgressLog.ScrollToEnd();
-                            }));
+                            updateProgressLog(String.Format("  {0}", localPath), "Black");
+
                             uploadFileLength = (ulong)fileStream.Length;
                             m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
                             fileStream.Close();
 
-                            Dispatcher.Invoke(new Action(delegate () {
-                                txtProgressLog.AppendText("    --> Done!!\r\n");
-                                txtProgressLog.ScrollToEnd();
-                            }));
                         }
                         if (loop_count != listTxRxFile.Count)
                         {
@@ -476,6 +527,7 @@ namespace SystemUpgrade
                             break;
                         }
                     }
+                    updateProgressLog("upload --> Done!!", "Green");
                 } while (retry);
             }
             catch (Exception ex)
@@ -484,8 +536,16 @@ namespace SystemUpgrade
                 Console.WriteLine(ex.StackTrace);
             }
 
-            Dispatcher.Invoke(new Action(delegate () { loadRemoteDirList(); }));
-            uploadActive = false;
+            Dispatcher.Invoke(new Action(delegate () { 
+                loadRemoteDirList();
+                if ((sshCommandthread != null) && (sshCommandthread.IsAlive))
+                {
+                    return;
+                }
+                sshCommandthread = new Thread(() => upgradeExecuteCommand());
+                sshCommandthread.IsBackground = true;
+                sshCommandthread.Start();
+            }));
         }
         private void recvCommSSHData()
         {
@@ -497,13 +557,18 @@ namespace SystemUpgrade
                     {
                         if (m_sshShell != null && m_sshShell.DataAvailable)
                         {
-                            String strData = m_sshShell.ReadLine();
-
+                            string strData = m_sshShell.Read();
+                            string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
+                            string pattern = String.Format("[sudo] password for {0}: ", currentConnInfo.UserName);
                             Dispatcher.Invoke(delegate () {
-                                string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
-                                txtSshLog.AppendText(str + "\r\n");
+                                txtSshLog.AppendText(str);
                                 txtSshLog.ScrollToEnd();
                             });
+
+                            if (str.Contains(pattern))
+                            {
+                                m_sshShell.WriteLine(currentConnInfo.Password);
+                            }
                         }
                     }
                 }
@@ -512,8 +577,37 @@ namespace SystemUpgrade
                     Console.WriteLine(ex.Message);
                     Console.WriteLine(ex.StackTrace);
                 }
+            }
+        }
+        private void upgradeExecuteCommand()
+        {
+            try
+            {
+                if ((m_sshCommand != null) && (m_sshCommand.IsConnected))
+                {
+                    updateProgressLog("execute user command", "Green");
 
-                Thread.Sleep(10);
+                    foreach (UserCommand cmd in listSshCommand)
+                    {
+                        m_sshShell.WriteLine(cmd.Cmd);
+                        updateProgressLog(String.Format("  {0}", cmd.Cmd), "Black");
+                        
+                        if (cmd.IsSudo)
+                        {
+                            Thread.Sleep(500);
+                        }
+                        else
+                        {
+                            Thread.Sleep(100);
+                        }
+                    }
+
+                    updateProgressLog("execute --> Done!!", "Green");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
     }
