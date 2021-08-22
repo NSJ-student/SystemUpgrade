@@ -6,7 +6,7 @@
         xmlns:ac="clr-namespace:AdornedControl;assembly=AdornedControl"
         xmlns:local="clr-namespace:SystemUpgrade"
         mc:Ignorable="d"
-        Title="MainWindow" Height="640" Width="571.6" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="640" Width="575" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen">
 
     <Grid Margin="10,0,10,10" Background="Transparent">
         <Grid.RowDefinitions>
@@ -50,6 +50,7 @@
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                             <Setter Property="VerticalContentAlignment" Value="Stretch"></Setter>
+                            <Setter Property="ToolTip" Value="{Binding Path=Tooltip}" />
                         </Style>
                     </ListView.ItemContainerStyle>
                     <ListView.View>
@@ -68,6 +69,13 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Size}" HorizontalAlignment="Right"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Progress" Width="200">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ProgressBar Maximum="100" Height="20" Width="200" Value="{Binding Progress}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>

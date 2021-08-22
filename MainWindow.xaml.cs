@@ -35,6 +35,7 @@ namespace SystemUpgrade
         // for file trans
         SftpClient m_sftpClient;
         List<UserTxRxInfo> listTxRxFile;
+        UserTxRxInfo currentUploadItem;
         Thread uploadThread;
         Thread connectThread;
         ulong uploadFileLength;
@@ -71,7 +72,9 @@ namespace SystemUpgrade
             listConnInfo.Add(new UserConnInfo("192.168.0.100",  "sujin", "aprtmdnpf05!"));
 
             listTxRxFile = new List<UserTxRxInfo>();
+            listLocalFile.ItemsSource = listTxRxFile;
             remoteDirPath = "";
+            currentUploadItem = null;
 
             listSshCommand_Pre = new List<UserCommand>();
             listSshCommand = new List<UserCommand>();
@@ -92,9 +95,12 @@ namespace SystemUpgrade
             listSshCommand.Clear();
             listSshCommand_Pre.Clear();
 
-            List<UserFileInfo> user_Items = new List<UserFileInfo>();
-            listLocalFile.ItemsSource = user_Items;
-            listRemoteFile.ItemsSource = user_Items;
+            foreach(UserTxRxInfo info in listTxRxFile)
+            {
+                info.Progress = 0;
+            }
+            listLocalFile.Items.Refresh();
+            listRemoteFile.ItemsSource = new List<UserFileInfo>();
 
             txtSshLog.Clear();
 
@@ -131,8 +137,7 @@ namespace SystemUpgrade
                     // get library list
                     var xelements = xdoc.Root.Elements("libs");
 
-                    List<UserFileInfo> user_Items = new List<UserFileInfo>();
-
+                    listTxRxFile.Clear();
                     foreach (var xList in xelements)
                     {
                         XElement element;
@@ -146,39 +151,23 @@ namespace SystemUpgrade
                         string file_name = element.Value;
                         string local_path = local_dir + "/" + file_name;
                         string remote_path = m_sftpClient.WorkingDirectory + "/"+ file_name;
-
-                        if (File.Exists(local_path))
+                        
+                        int expected_size = 0;
+                        element = xList.Element("size");
+                        if (element != null)
                         {
-                            int expected_size = 0;
-                            element = xList.Element("size");
-                            if (element != null)
-                            {
-                                expected_size = Convert.ToInt32(element.Value);
-                            }
-
-                            FileInfo file = new FileInfo(local_path);
-                            if (expected_size == file.Length)
-                            {
-                                string file_size = file.Length.ToString("#,##0") + "B";
-
-                                listTxRxFile.Add(new UserTxRxInfo(local_path, remote_path, true));
-                                user_Items.Add(new UserFileInfo(file_name, file_size, true));
-                            }
-                            else
-                            {
-                                string file_size = expected_size.ToString("#,##0") + "B";
-                                user_Items.Add(new UserFileInfo(file_name, file_size, false));
-                                file_not_exists++;
-                            }
+                            expected_size = Convert.ToInt32(element.Value);
                         }
-                        else
+
+                        UserTxRxInfo info = new UserTxRxInfo(local_path, remote_path, expected_size);
+                        listTxRxFile.Add(info);
+
+                        if(!info.valid_file)
                         {
-                            user_Items.Add(new UserFileInfo(file_name));
                             file_not_exists++;
                         }
                     }
-                    user_Items = user_Items.OrderBy(a => a.Name).ToList();
-                    listLocalFile.ItemsSource = user_Items;
+                    listLocalFile.Items.Refresh();
 
                     // get command list
                     var cmd_elements = xdoc.Root.Elements("cmds");
@@ -365,7 +354,10 @@ namespace SystemUpgrade
         {
             int percent = (int)((uploaded * 100) / uploadFileLength);
 
-            Dispatcher.Invoke(new Action(delegate () { progressStatus.Value = percent; }));
+            if (currentUploadItem != null)
+            {
+                currentUploadItem.Progress = percent;
+            }
         }
 
         private void connectThreadFunc()
@@ -439,8 +431,10 @@ namespace SystemUpgrade
                     retry = false;
                     foreach (UserTxRxInfo item in listTxRxFile)
                     {
-                        if (item.Progress == 0 && item.Dir.Equals("->"))
+                        currentUploadItem = null;
+                        if (item.Progress == 0 && item.valid_file)
                         {
+                            currentUploadItem = item;
                             string localPath = item.LocalPath;
                             string remotePath = item.RemotePath;
                             Stream fileStream = new FileStream(localPath, FileMode.Open);
@@ -451,6 +445,7 @@ namespace SystemUpgrade
                             m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
                             fileStream.Close();
 
+                             Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
                         }
                         if (loop_count != listTxRxFile.Count)
                         {
@@ -550,6 +545,8 @@ namespace SystemUpgrade
                         {
                             Thread.Sleep(100);
                         }
+
+                        Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
                     }
 
                     updateProgressLog("execute --> Done!!", "Green");
@@ -646,6 +643,9 @@ namespace SystemUpgrade
 
         private void btnUpgradeDatas_Click(object sender, RoutedEventArgs e)
         {
+            progressStatus.Value = 0;
+            progressStatus.Maximum = listTxRxFile.Count + listSshCommand_Pre.Count + listSshCommand.Count;
+
             if ((m_sshCommand != null) && (m_sshCommand.IsConnected))
             {
                 updateProgressLog_UI("(pre-process) execute user command", "Green");
@@ -663,6 +663,8 @@ namespace SystemUpgrade
                     {
                         Thread.Sleep(100);
                     }
+
+                    progressStatus.Value++;
                 }
 
                 updateProgressLog_UI("pre-process --> Done!!", "Green");
@@ -896,23 +898,44 @@ namespace SystemUpgrade
 
     public class UserTxRxInfo : INotifyPropertyChanged
     {
-        public UserTxRxInfo(string local, string remote, bool local_to_remote)
+        //  <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+        public UserTxRxInfo(string local, string remote, int expected_size)
         {
             LocalPath = local;
             RemotePath = remote;
-            if (local_to_remote)
+            _progress = 0;
+            Time = DateTime.Now.ToString("yyyy.MM.dd ") + DateTime.Now.ToString("HH:mm:ss");
+
+            FileInfo file = new FileInfo(LocalPath);
+            if (file.Exists)
             {
-                Dir = "->";
+                if (expected_size == file.Length)
+
+                {
+                    Image = new BitmapImage(new Uri("pack://application:,,,/Resources/checked.png"));
+                    Name = file.Name;
+                    Size = file.Length.ToString("#,##0") + "B";
+                    valid_file = true;
+                }
+                else
+                {
+                    Image = new BitmapImage(new Uri("pack://application:,,,/Resources/warning.png"));
+                    Name = file.Name;
+                    Size = file.Length.ToString("#,##0") + "B";
+                    valid_file = false;
+                    Tooltip = "wrong file size";
+                }
             }
             else
             {
-                Dir = "<-";
+                Image = new BitmapImage(new Uri("pack://application:,,,/Resources/cancel.png"));
+                Name = file.Name;
+                Size = "";
+                valid_file = false;
+                Tooltip = "no file exists";
             }
-            _progress = 0;
-            Time = DateTime.Now.ToString("yyyy.MM.dd ") + DateTime.Now.ToString("HH:mm:ss");
         }
         public string LocalPath { get; set; }
-        public string Dir { get; set; }
         public string RemotePath { get; set; }
         public string Time { get; set; }
         private int _progress;
@@ -932,6 +955,12 @@ namespace SystemUpgrade
                 }
             }
         }
+
+        public string Name { get; set; }
+        public string Size { get; set; }
+        public BitmapImage Image { get; }
+        public bool valid_file { get; }
+        public string Tooltip { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
