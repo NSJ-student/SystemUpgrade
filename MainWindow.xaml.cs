@@ -22,6 +22,8 @@ using System.Xml.Linq;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
 
+//<div>Icons made by<a href="https://www.flaticon.com/authors/flat-icons" title="Flat Icons"> Flat Icons</a> from<a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+
 namespace SystemUpgrade
 {
     /// <summary>
@@ -176,6 +178,16 @@ namespace SystemUpgrade
             }
         }
 
+        private void StateActive()
+        {
+            stackButtons.IsEnabled = true;
+        }
+
+        private void StateDeActive()
+        {
+            stackButtons.IsEnabled = false;
+        }
+
         private void updateProgressLog(string text, string color)
         {
             Dispatcher.Invoke(new Action(delegate () {
@@ -213,7 +225,7 @@ namespace SystemUpgrade
                     int file_not_exists = 0;
 
                     string local_dir = System.IO.Path.GetDirectoryName(config_path);
-                    lblLocalPath.Text = local_dir;
+                    updateProgressLog_UI(String.Format("base dir: {0}", local_dir), "Blue");
 
                     var xdoc = XDocument.Load(config_path);
 
@@ -533,44 +545,37 @@ namespace SystemUpgrade
         {
             try
             {
-                int loop_count = listTxRxFile.Count;
-                bool retry = false;
-                do
+                updateProgressLog(String.Format("upload {0} files", listTxRxFile.Count), "Green");
+
+                foreach (UserTxRxInfo item in listTxRxFile)
                 {
-                    updateProgressLog(String.Format("upload {0} files", listTxRxFile.Count), "Green");
-                    loop_count = listTxRxFile.Count;
-                    retry = false;
-                    foreach (UserTxRxInfo item in listTxRxFile)
+                    if (!m_sftpClient.IsConnected)
                     {
-                        if (!m_sftpClient.IsConnected)
-                        {
-                            throw new Exception("sftp disconnected");
-                        }
-
-                        currentUploadItem = null;
-                        if (item.Progress == 0 && item.valid_file)
-                        {
-                            currentUploadItem = item;
-                            string localPath = item.LocalPath;
-                            string remotePath = item.RemotePath;
-                            Stream fileStream = new FileStream(localPath, FileMode.Open);
-
-                            updateProgressLog(String.Format("  {0}", localPath), "Black");
-
-                            uploadFileLength = (ulong)fileStream.Length;
-                            m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
-                            fileStream.Close();
-
-                             Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
-                        }
-                        if (loop_count != listTxRxFile.Count)
-                        {
-                            retry = true;
-                            break;
-                        }
+                        throw new Exception("sftp disconnected");
                     }
-                    updateProgressLog("upload --> Done!!", "Green");
-                } while (retry);
+
+                    currentUploadItem = null;
+                    if (item.valid_file)
+                    {
+                        currentUploadItem = item;
+                        string localPath = item.LocalPath;
+                        string remotePath = item.RemotePath;
+                        Stream fileStream = new FileStream(localPath, FileMode.Open);
+
+                        updateProgressLog(String.Format("  {0}", localPath), "Black");
+                        
+                        uploadFileLength = (ulong)fileStream.Length;
+                        m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
+                        fileStream.Close();
+
+                            Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                    }
+                    else
+                    {
+                        updateProgressLog(String.Format("upload: invalid file - {0}", item.LocalPath), "Red");
+                    }
+                }
+                updateProgressLog("upload --> Done!!", "Green");
 
                 Dispatcher.Invoke(new Action(delegate () {
                     loadRemoteDirList();
@@ -592,6 +597,12 @@ namespace SystemUpgrade
                 {
                     Dispatcher.Invoke(new Action(delegate () {
                         StateDisconnected_ClearAll();
+                    }));
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        StateActive();
                     }));
                 }
                 return;
@@ -617,21 +628,15 @@ namespace SystemUpgrade
                             string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
                             string pattern = String.Format("[sudo] password for {0}: ", currentConnInfo.UserName);
                             Dispatcher.Invoke(delegate () {
-    //                                string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + str + Environment.NewLine;
+//                                string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + str + Environment.NewLine;
                                 if(str == "\b")
                                 {
-                                    string s = txtSshLog.Text;
-
-                                    if (s.Length > 1)
+                                    if (txtSshLog.Text.Length > 1)
                                     {
-                                        s = s.Substring(0, s.Length - 1);
+                                        txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - 1);
+                                        txtSshLog.CaretIndex = txtSshLog.Text.Length;
+                                        txtSshLog.ScrollToEnd();
                                     }
-                                    else
-                                    {
-                                        s = "";
-                                    }
-
-                                    txtSshLog.Text = s;
                                 }
                                 else
                                 {
@@ -719,6 +724,12 @@ namespace SystemUpgrade
                         StateDisconnected_ClearAll();
                     }));
                 }
+                else
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        StateActive();
+                    }));
+                }
             }
         }
 
@@ -753,6 +764,9 @@ namespace SystemUpgrade
                     }
 
                     updateProgressLog("execute --> Done!!", "Green");
+                    Dispatcher.Invoke(new Action(delegate () {
+                        StateActive();
+                    }));
                 }
             }
             catch (Exception ex)
@@ -762,6 +776,12 @@ namespace SystemUpgrade
                 {
                     Dispatcher.Invoke(new Action(delegate () {
                         StateDisconnected_ClearAll();
+                    }));
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        StateActive();
                     }));
                 }
             }
@@ -846,6 +866,9 @@ namespace SystemUpgrade
                 }
 
                 updateProgressLog("check --> Done!!", "Green");
+                Dispatcher.Invoke(new Action(delegate () {
+                    StateActive();
+                }));
             }
             catch (Exception ex)
             {
@@ -854,6 +877,12 @@ namespace SystemUpgrade
                 {
                     Dispatcher.Invoke(new Action(delegate () {
                         StateDisconnected_ClearAll();
+                    }));
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        StateActive();
                     }));
                 }
             }
@@ -934,6 +963,11 @@ namespace SystemUpgrade
                     progressStatus.Value = 0;
                     progressStatus.Maximum = listTxRxFile.Count + listSshCommand_Pre.Count + listSshCommand.Count;
 
+                    foreach (UserTxRxInfo info in listTxRxFile)
+                    {
+                        info.Progress = 0;
+                    }
+
                     if ((sshPreCommandthread != null) && (sshPreCommandthread.IsAlive))
                     {
                         return;
@@ -941,6 +975,7 @@ namespace SystemUpgrade
                     sshPreCommandthread = new Thread(() => upgradeExecutePreCommand());
                     sshPreCommandthread.IsBackground = true;
                     sshPreCommandthread.Start();
+                    StateDeActive();
                 }
                 catch (Exception ex)
                 {
@@ -959,6 +994,12 @@ namespace SystemUpgrade
             progressStatus.Value = 0;
             progressStatus.Maximum = listSshCheck.Count;
 
+            if(listSshCheck.Count == 0)
+            {
+                updateProgressLog_UI("check: no command", "Green");
+                return;
+            }
+
             if (((m_sftpClient != null) && (m_sftpClient.IsConnected)) &&
                 ((m_sshCommand != null) && (m_sshCommand.IsConnected)))
             {
@@ -971,6 +1012,7 @@ namespace SystemUpgrade
                     sshCheckhread = new Thread(() => upgradeCheckCommand());
                     sshCheckhread.IsBackground = true;
                     sshCheckhread.Start();
+                    StateDeActive();
                 }
                 catch (Exception ex)
                 {
@@ -1072,6 +1114,7 @@ namespace SystemUpgrade
 
         private void btnWindowClose_Click(object sender, RoutedEventArgs e)
         {
+            StateDisconnected_ClearAll();
             Close();
         }
         
