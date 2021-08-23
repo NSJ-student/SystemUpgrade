@@ -10,7 +10,7 @@
 	</libs>
 
   <cmds>
-    <cmd>cd Desktop</cmd>
+    <cmd>cd ~/Desktop</cmd>
   </cmds>
 	<cmds>
   	<cmd>ls -alt</cmd>
@@ -26,4 +26,31 @@
 	<cmds>
   	<cmd>mkdir test</cmd>
 	</cmds>
+	
+	<check>
+		<type>1</type>
+	  <file>DISP_CTRL</file>
+	  <size>1054496</size>
+	</check>
+	<check>
+		<type>1</type>
+	  <file>RemoteUpgrade</file>
+	  <size>134928</size>
+	</check>
+	<check>
+		<type>5</type>
+	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not found"</cmd>
+	  <exit_status>1</exit_status>
+	</check>
+	<check>
+		<type>5</type>
+	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not found"</cmd>
+	  <exit_status>1</exit_status>
+	</check>
+	<!--
+	<check>
+		<type>2</type>
+	  <cmd>pidof test</cmd>
+	</check>
+	-->
 </list>

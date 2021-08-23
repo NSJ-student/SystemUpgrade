@@ -6,7 +6,7 @@
         xmlns:ac="clr-namespace:AdornedControl;assembly=AdornedControl"
         xmlns:local="clr-namespace:SystemUpgrade"
         mc:Ignorable="d"
-        Title="MainWindow" Height="640" Width="575" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="640" Width="575" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen" Icon="Resources/firmware.png">
 
     <Grid Margin="10,0,10,10" Background="Transparent">
         <Grid.RowDefinitions>
@@ -18,7 +18,10 @@
                 <ColumnDefinition Width="29*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="btnWindowClose" Content="" HorizontalAlignment="Right" Margin="0,0,-10,0" Width="45" Height="30" Grid.Column="1" BorderThickness="0" Click="btnWindowClose_Click" Padding="0" VerticalAlignment="Top" Background="Red"/>
+            <Button x:Name="btnWindowClose" Content="" 
+                    HorizontalAlignment="Right" Margin="0,0,-10,0" Width="45" Height="30" Grid.Column="1" 
+                    BorderThickness="0" Click="btnWindowClose_Click" Padding="0" VerticalAlignment="Top" Background="Red"
+                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"/>
         </Grid>
 
         <ac:AdornedControl Name="LoadingAdorner" Grid.Row="1">
@@ -39,9 +42,8 @@
                     <RowDefinition Height="20*"/>
                 </Grid.RowDefinitions>
                 <WrapPanel Orientation="Horizontal" Margin="10,10,10,0" Grid.ColumnSpan="2">
-                    <RadioButton x:Name="rbFpd4Sel1" Content="GM FPD-Link4 (1)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
-                    <RadioButton x:Name="rbFpd4Sel2" Content="GM FPD-Link4 (2)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
-                    <RadioButton x:Name="rbFpd3Sel1" Content="GM FPD-Link3" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
+                    <RadioButton x:Name="rbGmSimSel" Content="GM Simulator" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
+                    <RadioButton x:Name="rbGmSimDevSel" Content="GM Simulator Dev" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
                     <RadioButton x:Name="rbTest" Content="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0"/>
                     <Button x:Name="btnConnect" Content="CONNECT" Width="75" VerticalAlignment="Center" Margin="25,5,0,5" HorizontalAlignment="Center" Click="btnConnect_Click" Height="25"/>
                 </WrapPanel>
@@ -113,10 +115,10 @@
                     <TextBox x:Name="lblLocalPath" Grid.Row="1" VerticalAlignment="Center" Grid.Column="1" Text="./" IsReadOnly="True" BorderThickness="0"/>
                     <Label Content="Path :" HorizontalAlignment="Left" Margin="0" Grid.Row="1" VerticalAlignment="Center"/>
                 </Grid>
-                <StackPanel x:Name="stackButtons" Orientation="Horizontal" Grid.Row="2" Margin="0" HorizontalAlignment="Center">
-                    <Button x:Name="btnLoadDatas" Content="Load" Width="70" VerticalAlignment="Center" HorizontalAlignment="Left" Click="btnLoadDatas_Click" Height="25"/>
-                    <Button x:Name="btnUpgradeDatas" Content="Upgrade" Width="70" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnUpgradeDatas_Click" Height="25"/>
-                    <Button x:Name="btnCheckUpgrade" Content="Check" Width="70" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnCheckUpgrade_Click" Height="25"/>
+                <StackPanel x:Name="stackButtons" Orientation="Horizontal" Grid.Row="2" Margin="20,0,0,0" HorizontalAlignment="Left">
+                    <Button x:Name="btnLoadDatas" Content="Load" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" Click="btnLoadDatas_Click" Height="25"/>
+                    <Button x:Name="btnUpgradeDatas" Content="Upgrade" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnUpgradeDatas_Click" Height="25"/>
+                    <Button x:Name="btnCheckUpgrade" Content="Check" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnCheckUpgrade_Click" Height="25"/>
                 </StackPanel>
                 <Rectangle Fill="#FFBFBFBF" Height="3" VerticalAlignment="Top" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5" Grid.Row="1" Margin="10,15">
                     <Rectangle.RenderTransform>
@@ -135,7 +137,7 @@
                             <RowDefinition Height="324*"/>
                             <RowDefinition Height="172*"/>
                         </Grid.RowDefinitions>
-                        <TextBox x:Name="txtSshLog" FontFamily="Consolas" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" Margin="10,0,0,5" Padding="0" Grid.RowSpan="2" TextInput="txtSshLog_TextInput" PreviewKeyDown="txtSshLog_PreviewKeyDown">
+                        <TextBox x:Name="txtSshLog" FontFamily="Consolas" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" Margin="10,0,0,5" Padding="0" Grid.RowSpan="2" TextInput="txtSshLog_TextInput" PreviewKeyDown="txtSshLog_PreviewKeyDown" Background="Black" Foreground="White">
                             <TextBox.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Clear" Click="MenuItem_Click"/>

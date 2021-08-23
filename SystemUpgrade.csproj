@@ -139,5 +139,8 @@
   <ItemGroup>
     <Resource Include="Resources\checked.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\firmware.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
