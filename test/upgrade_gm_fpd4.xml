@@ -108,16 +108,12 @@
 	  <file>RemoteUpgrade</file>
 	  <size>134928</size>
 	</check>
+  <!--
 	<check>
 		<type>5</type>
 		<cmd_desc>RemoteUpgrade library check</cmd_desc>
-	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not found"</cmd>
+	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not"</cmd>
 	  <exit_status>1</exit_status>
 	</check>
-	<check>
-		<type>5</type>
-		<cmd_desc>DISP_CTRL library check</cmd_desc>
-	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not found"</cmd>
-	  <exit_status>1</exit_status>
-	</check>
+  -->
 </list>

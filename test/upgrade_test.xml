@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <list>
+  <config>test</config>
+  
 	<libs>
 	  <lib>libgtk.tar</lib>
 	  <size>5611520</size>

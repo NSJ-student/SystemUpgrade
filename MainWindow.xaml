@@ -92,11 +92,12 @@
                     </ListView.View>
                 </ListView>
                 <StackPanel x:Name="stackButtons" Orientation="Horizontal" Grid.Row="2" Margin="20,20,0,0" HorizontalAlignment="Left">
-                    <Button x:Name="btnLoadDatas" Content="Load" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" Click="btnLoadDatas_Click" Height="25"/>
-                    <Button x:Name="btnUpgradeDatas" Content="Upgrade" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnUpgradeDatas_Click" Height="25"/>
-                    <Button x:Name="btnCheckUpgrade" Content="Check" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnCheckUpgrade_Click" Height="25"/>
+                    <Button x:Name="btnLoadDatas" Content="Load" Width="75" VerticalAlignment="Center" HorizontalAlignment="Left" Click="btnLoadDatas_Click" Height="25"/>
+                    <Button x:Name="btnUpgradeDatas" Content="Upgrade" Width="75" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="5,0,0,0" Click="btnUpgradeDatas_Click" Height="25"/>
+                    <Button x:Name="btnCheckUpgrade" Content="Check" Width="75" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="5,0,0,0" Click="btnCheckUpgrade_Click" Height="25"/>
                     <ProgressBar x:Name="progressStatus" Margin="20,0,0,0" Height="25" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="lblProgressStatus" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="5,0,0,0"/>
+                    <Image x:Name="imageResult" Width="15" Height="15" Margin="5,0,0,0"/>
+                    <TextBlock x:Name="lblProgressStatus" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"/>
                 </StackPanel>
                 <Rectangle Fill="#FFBFBFBF" Height="3" VerticalAlignment="Top" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5" Grid.Row="1" Margin="10,15,10,0">
                     <Rectangle.RenderTransform>

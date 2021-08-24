@@ -52,7 +52,7 @@ namespace SystemUpgrade
         Thread sshRecvthread;
         Thread sshPreCommandthread;
         Thread sshCommandthread;
-        Thread sshCheckhread;
+        Thread sshCheckThread;
 
         // resize
         bool windowMove;
@@ -70,7 +70,7 @@ namespace SystemUpgrade
             listConnInfo = new List<UserConnInfo>();
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "roqkfdmfwkfgkwk!"));
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "nvidia"));
-            listConnInfo.Add(new UserConnInfo("192.168.0.100",  "sujin", "aprtmdnpf05!"));
+            listConnInfo.Add(new UserConnInfo("192.168.0.100",  "sujin", "sujin1234"));
 
             listTxRxFile = new List<UserTxRxInfo>();
             listLocalFile.ItemsSource = listTxRxFile;
@@ -105,6 +105,8 @@ namespace SystemUpgrade
             rbTest.IsEnabled = false;
 
             btnConnect.Content = "Close";
+
+            updateProgressLog_UI("ssh/sftp connected", "Blue");
         }
 
         private void StateDisconnected()
@@ -172,9 +174,9 @@ namespace SystemUpgrade
             {
                 sshCommandthread.Abort();
             }
-            if ((sshCheckhread != null) && (sshCheckhread.IsAlive))
+            if ((sshCheckThread != null) && (sshCheckThread.IsAlive))
             {
-                sshCheckhread.Abort();
+                sshCheckThread.Abort();
             }
         }
 
@@ -575,77 +577,6 @@ namespace SystemUpgrade
             }
         }
 
-        private void uploadThreadFunc()
-        {
-            try
-            {
-                updateProgressLog(String.Format("upload {0} files", listTxRxFile.Count), "Green");
-
-                foreach (UserTxRxInfo item in listTxRxFile)
-                {
-                    if (!m_sftpClient.IsConnected)
-                    {
-                        throw new Exception("sftp disconnected");
-                    }
-
-                    currentUploadItem = null;
-                    if (item.valid_file)
-                    {
-                        currentUploadItem = item;
-                        string localPath = item.LocalPath;
-                        string remotePath = item.RemotePath;
-                        Stream fileStream = new FileStream(localPath, FileMode.Open);
-
-                        updateProgressLog(String.Format("    {0}", localPath), "Black");
-                        
-                        uploadFileLength = (ulong)fileStream.Length;
-                        m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
-                        fileStream.Close();
-
-                        Dispatcher.Invoke(new Action(delegate () { 
-                            progressStatus.Value++;
-                            lblProgressStatus.Text = String.Format("Upgrade {0}/{1}", progressStatus.Value, progressStatus.Maximum);
-                        }));
-                    }
-                    else
-                    {
-                        updateProgressLog(String.Format("upload: invalid file - {0}", item.LocalPath), "Red");
-                    }
-                }
-                updateProgressLog("upload --> Done!!", "Green");
-
-                Dispatcher.Invoke(new Action(delegate () {
-                    loadRemoteDirList();
-                }));
-
-                // start command work
-                if ((sshCommandthread != null) && (sshCommandthread.IsAlive))
-                {
-                    return;
-                }
-                sshCommandthread = new Thread(() => upgradeExecuteCommand());
-                sshCommandthread.IsBackground = true;
-                sshCommandthread.Start();
-            }
-            catch (Exception ex)
-            {
-                updateProgressLog("upload: " + ex.Message, "Red");
-                if(!m_sftpClient.IsConnected)
-                {
-                    Dispatcher.Invoke(new Action(delegate () {
-                        StateDisconnected_ClearAll();
-                    }));
-                }
-                else
-                {
-                    Dispatcher.Invoke(new Action(delegate () {
-                        StateActive();
-                    }));
-                }
-                return;
-            }
-        }
-
         private void recvCommSSHData()
         {
             while (true)
@@ -767,6 +698,7 @@ namespace SystemUpgrade
             catch (Exception ex)
             {
                 updateProgressLog("pre-process: " + ex.Message, "Red");
+                imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                 if (!m_sshCommand.IsConnected)
                 {
                     Dispatcher.Invoke(new Action(delegate () {
@@ -779,6 +711,83 @@ namespace SystemUpgrade
                         StateActive();
                     }));
                 }
+            }
+        }
+
+        private void uploadThreadFunc()
+        {
+            try
+            {
+                updateProgressLog(String.Format("upload {0} files", listTxRxFile.Count), "Green");
+
+                foreach (UserTxRxInfo item in listTxRxFile)
+                {
+                    if (!m_sftpClient.IsConnected)
+                    {
+                        throw new Exception("sftp disconnected");
+                    }
+
+                    currentUploadItem = null;
+                    if (item.valid_file)
+                    {
+                        currentUploadItem = item;
+                        string localPath = item.LocalPath;
+                        string remotePath = item.RemotePath;
+                        Stream fileStream = new FileStream(localPath, FileMode.Open);
+
+                        updateProgressLog(String.Format("    {0}", localPath), "Black");
+
+                        uploadFileLength = (ulong)fileStream.Length;
+                        m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
+                        fileStream.Close();
+
+                        Dispatcher.Invoke(new Action(delegate () {
+                            currentUploadItem.Progress = 100;
+                            progressStatus.Value++;
+                        }));
+                    }
+                    else
+                    {
+                        updateProgressLog(String.Format("upload: invalid file - {0}", item.LocalPath), "Red");
+                    }
+
+                    Dispatcher.Invoke(new Action(delegate () {
+                        lblProgressStatus.Text = String.Format("Upgrade {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                    }));
+                }
+                updateProgressLog("upload --> Done!!", "Green");
+
+                Dispatcher.Invoke(new Action(delegate () {
+                    loadRemoteDirList();
+                }));
+
+                // start command work
+                if ((sshCommandthread != null) && (sshCommandthread.IsAlive))
+                {
+                    return;
+                }
+                sshCommandthread = new Thread(() => upgradeExecuteCommand());
+                sshCommandthread.IsBackground = true;
+                sshCommandthread.Start();
+            }
+            catch (Exception ex)
+            {
+                updateProgressLog("upload: " + ex.Message, "Red");
+                if (!m_sftpClient.IsConnected)
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
+                        StateDisconnected_ClearAll();
+                    }));
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
+                        StateActive();
+                    }));
+                }
+                return;
             }
         }
 
@@ -826,6 +835,7 @@ namespace SystemUpgrade
 
                     updateProgressLog("execute --> Done!!", "Green");
                     Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/checked.png"));
                         StateActive();
                     }));
                 }
@@ -836,12 +846,14 @@ namespace SystemUpgrade
                 if (!m_sshCommand.IsConnected)
                 {
                     Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                         StateDisconnected_ClearAll();
                     }));
                 }
                 else
                 {
                     Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                         StateActive();
                     }));
                 }
@@ -854,6 +866,7 @@ namespace SystemUpgrade
             {
                 updateProgressLog("check upgrade", "Green");
 
+                int failed = 0;
                 foreach (UserCommand cmd in listSshCheck)
                 {
                     if (cmd.Type == UserCommand.CommandType.CHECK_SIZE)
@@ -865,28 +878,32 @@ namespace SystemUpgrade
                                 throw new Exception("sftp disconnected");
                             }
 
-                            SftpFileAttributes file_info = m_sftpClient.GetAttributes(cmd.RemotePath);
-
-                            if(file_info == null)
+                            if(!m_sftpClient.Exists(cmd.RemotePath))
                             {
-                                updateProgressLog(String.Format("    file: no file - {0}", cmd.RemotePath), "Red");
-                            }
-                            else if(file_info.Size == cmd.FileSize)
-                            {
-                                updateProgressLog(String.Format("    file: {0}", cmd.RemotePath), "Black");
-                                Dispatcher.Invoke(new Action(delegate () {
-                                    progressStatus.Value++;
-                                    lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
-                                }));
+                                updateProgressLog(String.Format("    file: no such file - {0}", cmd.RemotePath), "Red");
+                                failed++;
                             }
                             else
                             {
-                                updateProgressLog(String.Format("    file size check: size error - {0}", cmd.RemotePath), "Red");
+                                SftpFileAttributes file_info = m_sftpClient.GetAttributes(cmd.RemotePath);
+                                if (file_info.Size == cmd.FileSize)
+                                {
+                                    updateProgressLog(String.Format("    file: {0}", cmd.RemotePath), "Black");
+                                    Dispatcher.Invoke(new Action(delegate () {
+                                        progressStatus.Value++;
+                                    }));
+                                }
+                                else
+                                {
+                                    updateProgressLog(String.Format("    file size check: size error - {0}", cmd.RemotePath), "Red");
+                                    failed++;
+                                }
                             }
                         }
                         else
                         {
                             updateProgressLog("  sftp not connected", "Red");
+                            failed++;
                         }
                     }
                     else if (cmd.Type != UserCommand.CommandType.CMD_EXEC)
@@ -908,7 +925,6 @@ namespace SystemUpgrade
                                 updateProgressLog(String.Format("    cmd: {0}", cmd.CmdDescription), "Black");
                                 Dispatcher.Invoke(new Action(delegate () {
                                     progressStatus.Value++;
-                                    lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
                                 }));
                             }
                             else if ((cmd.Type == UserCommand.CommandType.CMD_PASS_EXIT_VALUE) && command.ExitStatus == cmd.ExitStatus)
@@ -916,7 +932,6 @@ namespace SystemUpgrade
                                 updateProgressLog(String.Format("    cmd: {0}", cmd.CmdDescription), "Black");
                                 Dispatcher.Invoke(new Action(delegate () {
                                     progressStatus.Value++;
-                                    lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
                                 }));
                             }
                             else
@@ -925,18 +940,31 @@ namespace SystemUpgrade
                                 updateProgressLog(String.Format("      exitStatus: {0}", command.ExitStatus), "Red");
                                 if (command.Error != "") updateProgressLog(String.Format("      error: {0}", command.Error), "Red");
                                 if (result!="") updateProgressLog(String.Format("      result: {0}",  result), "Red");
+                                failed++;
                             }
                         }
                         else
                         {
                             updateProgressLog("  ssh not connected", "Red");
+                            failed++;
                         }
                     }
 
+                    Dispatcher.Invoke(new Action(delegate () {
+                        lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                    }));
                 }
 
                 updateProgressLog("check --> Done!!", "Green");
                 Dispatcher.Invoke(new Action(delegate () {
+                    if(failed>0)
+                    {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
+                    }
+                    else
+                    {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/checked.png"));
+                    }
                     StateActive();
                 }));
             }
@@ -946,12 +974,14 @@ namespace SystemUpgrade
                 if (!m_sshCommand.IsConnected || !m_sftpClient.IsConnected)
                 {
                     Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                         StateDisconnected_ClearAll();
                     }));
                 }
                 else
                 {
                     Dispatcher.Invoke(new Action(delegate () {
+                        imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                         StateActive();
                     }));
                 }
@@ -1029,36 +1059,37 @@ namespace SystemUpgrade
 
         private void btnUpgradeDatas_Click(object sender, RoutedEventArgs e)
         {
-            if ((m_sshCommand != null) && (m_sshCommand.IsConnected))
-            {
-                try
-                {
-                    progressStatus.Value = 0;
-                    progressStatus.Maximum = listTxRxFile.Count + listSshCommand_Pre.Count + listSshCommand.Count;
+            progressStatus.Value = 0;
+            progressStatus.Maximum = listTxRxFile.Count + listSshCommand_Pre.Count + listSshCommand.Count;
+            imageResult.Source = new BitmapImage();
 
-                    foreach (UserTxRxInfo info in listTxRxFile)
-                    {
-                        info.Progress = 0;
-                    }
-
-                    if ((sshPreCommandthread != null) && (sshPreCommandthread.IsAlive))
-                    {
-                        return;
-                    }
-                    sshPreCommandthread = new Thread(() => upgradeExecutePreCommand());
-                    sshPreCommandthread.IsBackground = true;
-                    sshPreCommandthread.Start();
-                    StateDeActive();
-                }
-                catch (Exception ex)
-                {
-                    updateProgressLog(ex.Message, "Red");
-                }
-            }
-            else
+            if ((m_sshCommand == null) || (!m_sshCommand.IsConnected))
             {
                 StateDisconnected_ClearAll();
+                imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                 return;
+            }
+
+            try
+            {
+                foreach (UserTxRxInfo info in listTxRxFile)
+                {
+                    info.Progress = 0;
+                }
+
+                if ((sshPreCommandthread != null) && (sshPreCommandthread.IsAlive))
+                {
+                    return;
+                }
+                sshPreCommandthread = new Thread(() => upgradeExecutePreCommand());
+                sshPreCommandthread.IsBackground = true;
+                sshPreCommandthread.Start();
+                StateDeActive();
+            }
+            catch (Exception ex)
+            {
+                updateProgressLog(ex.Message, "Red");
+                imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
             }
         }
 
@@ -1066,36 +1097,37 @@ namespace SystemUpgrade
         {
             progressStatus.Value = 0;
             progressStatus.Maximum = listSshCheck.Count;
+            imageResult.Source = new BitmapImage();
 
-            if(listSshCheck.Count == 0)
+            if (listSshCheck.Count == 0)
             {
                 updateProgressLog_UI("check: no command", "Green");
                 return;
             }
 
-            if (((m_sftpClient != null) && (m_sftpClient.IsConnected)) &&
-                ((m_sshCommand != null) && (m_sshCommand.IsConnected)))
-            {
-                try
-                {
-                    if ((sshCheckhread != null) && (sshCheckhread.IsAlive))
-                    {
-                        return;
-                    }
-                    sshCheckhread = new Thread(() => upgradeCheckCommand());
-                    sshCheckhread.IsBackground = true;
-                    sshCheckhread.Start();
-                    StateDeActive();
-                }
-                catch (Exception ex)
-                {
-                    updateProgressLog(ex.Message, "Red");
-                }
-            }
-            else
+            if (((m_sftpClient == null) || (!m_sftpClient.IsConnected)) ||
+                ((m_sshCommand == null) || (!m_sshCommand.IsConnected)))
             {
                 StateDisconnected_ClearAll();
+                imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                 return;
+            }
+
+            try
+            {
+                if ((sshCheckThread != null) && (sshCheckThread.IsAlive))
+                {
+                    return;
+                }
+                sshCheckThread = new Thread(() => upgradeCheckCommand());
+                sshCheckThread.IsBackground = true;
+                sshCheckThread.Start();
+                StateDeActive();
+            }
+            catch (Exception ex)
+            {
+                updateProgressLog(ex.Message, "Red");
+                imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
             }
         }
 
