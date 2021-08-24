@@ -57,10 +57,7 @@ namespace SystemUpgrade
         // resize
         bool windowMove;
         Point lastPoint;
-
-        static Regex prompt = new Regex("[a-zA-Z0-9_.-]*\\@[a-zA-Z0-9_.-]*\\:\\~[#$] ", RegexOptions.Compiled);
-        static Regex pwdPrompt = new Regex("password for .*\\:", RegexOptions.Compiled);
-        static Regex promptOrPwd = new Regex(prompt + "|" + pwdPrompt);
+        public static RoutedCommand DebugOnOff = new RoutedCommand();
 
         public MainWindow()
         {
@@ -85,6 +82,9 @@ namespace SystemUpgrade
             listSshCheck = new List<UserCommand>();
 
             windowMove = false;
+            expenderDebug.IsEnabled = false;
+            DebugOnOff.InputGestures.Add(new KeyGesture(Key.G, ModifierKeys.Control));
+            CommandBindings.Add(new CommandBinding(DebugOnOff, DebugOnOffExecuted));
 
             expenderDebug.VerticalAlignment = VerticalAlignment.Center;
             StateDisconnected_ClearAll();
@@ -181,6 +181,9 @@ namespace SystemUpgrade
         private void StateActive()
         {
             stackButtons.IsEnabled = true;
+
+            btnUpgradeDatas.IsEnabled = (listSshCommand_Pre.Count > 0 || listSshCommand.Count > 0 || listTxRxFile.Count > 0);
+            btnCheckUpgrade.IsEnabled = (listSshCheck.Count>0);
         }
 
         private void StateDeActive()
@@ -225,9 +228,18 @@ namespace SystemUpgrade
                     int file_not_exists = 0;
 
                     string local_dir = System.IO.Path.GetDirectoryName(config_path);
-                    updateProgressLog_UI(String.Format("base dir: {0}", local_dir), "Blue");
+                    updateProgressLog_UI(String.Format("    base dir: {0}", local_dir), "Black");
 
                     var xdoc = XDocument.Load(config_path);
+
+                    var config_elements = xdoc.Root.Element("config");
+                    if(config_elements == null)
+                    {
+                        updateProgressLog_UI("    no info", "Red");
+                        return false;
+                    }
+
+                    updateProgressLog_UI(String.Format("    config: {0}", config_elements.Value), "Black");
 
                     // get library list
                     var xelements = xdoc.Root.Elements("libs");
@@ -259,6 +271,7 @@ namespace SystemUpgrade
 
                         if(!info.valid_file)
                         {
+                            updateProgressLog_UI(String.Format("    {0}: {1}", info.Tooltip, file_name), "Red");
                             file_not_exists++;
                         }
                     }
@@ -269,6 +282,13 @@ namespace SystemUpgrade
                     listSshCommand.Clear();
                     foreach (var xList in cmd_elements)
                     {
+                        string descrition = "";
+                        XElement desc_element = xList.Element("cmd_desc");
+                        if (desc_element != null)
+                        {
+                            descrition = desc_element.Value;
+                        }
+
                         XElement cmd_element = xList.Element("cmd");
                         if (cmd_element == null)
                         {
@@ -279,11 +299,11 @@ namespace SystemUpgrade
                         if (sudo_element != null)
                         {
                             bool sudo = Convert.ToBoolean(sudo_element.Value);
-                            listSshCommand.Add(new UserCommand(cmd_element.Value, sudo));
+                            listSshCommand.Add(new UserCommand(cmd_element.Value, descrition, sudo));
                         }
                         else
                         {
-                            listSshCommand.Add(new UserCommand(cmd_element.Value, false));
+                            listSshCommand.Add(new UserCommand(cmd_element.Value, descrition));
                         }
                     }
 
@@ -292,6 +312,13 @@ namespace SystemUpgrade
                     listSshCommand_Pre.Clear();
                     foreach (var xList in precmd_elements)
                     {
+                        string descrition = "";
+                        XElement desc_element = xList.Element("cmd_desc");
+                        if (desc_element != null)
+                        {
+                            descrition = desc_element.Value;
+                        }
+
                         XElement cmd_element = xList.Element("cmd");
                         if (cmd_element == null)
                         {
@@ -302,11 +329,11 @@ namespace SystemUpgrade
                         if (sudo_element != null)
                         {
                             bool sudo = Convert.ToBoolean(sudo_element.Value);
-                            listSshCommand_Pre.Add(new UserCommand(cmd_element.Value, sudo));
+                            listSshCommand_Pre.Add(new UserCommand(cmd_element.Value, descrition, sudo));
                         }
                         else
                         {
-                            listSshCommand_Pre.Add(new UserCommand(cmd_element.Value, false));
+                            listSshCommand_Pre.Add(new UserCommand(cmd_element.Value, descrition));
                         }
                     }
 
@@ -319,6 +346,13 @@ namespace SystemUpgrade
                         if (type_element == null)
                         {
                             continue;
+                        }
+
+                        string descrition = "";
+                        XElement desc_element = xList.Element("cmd_desc");
+                        if (desc_element != null)
+                        {
+                            descrition = desc_element.Value;
                         }
 
                         int type = Convert.ToInt32(type_element.Value);
@@ -348,7 +382,7 @@ namespace SystemUpgrade
                                 continue;
                             }
 
-                            listSshCheck.Add(new UserCommand(cmd_element.Value, (UserCommand.CommandType)type));
+                            listSshCheck.Add(new UserCommand(cmd_element.Value, (UserCommand.CommandType)type, descrition));
                         }
                         else if (type == (int)UserCommand.CommandType.CMD_PASS_EXIT_VALUE)
                         {
@@ -365,7 +399,7 @@ namespace SystemUpgrade
                             }
 
                             int exit_status = Convert.ToInt32(exit_element.Value);
-                            listSshCheck.Add(new UserCommand(cmd_element.Value, UserCommand.CommandType.CMD_PASS_EXIT_VALUE, exit_status));
+                            listSshCheck.Add(new UserCommand(cmd_element.Value, UserCommand.CommandType.CMD_PASS_EXIT_VALUE, descrition, exit_status));
                         }
                     }
 
@@ -562,13 +596,16 @@ namespace SystemUpgrade
                         string remotePath = item.RemotePath;
                         Stream fileStream = new FileStream(localPath, FileMode.Open);
 
-                        updateProgressLog(String.Format("  {0}", localPath), "Black");
+                        updateProgressLog(String.Format("    {0}", localPath), "Black");
                         
                         uploadFileLength = (ulong)fileStream.Length;
                         m_sftpClient.UploadFile(fileStream, remotePath, UpdateUploadProgresBar);
                         fileStream.Close();
 
-                            Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                        Dispatcher.Invoke(new Action(delegate () { 
+                            progressStatus.Value++;
+                            lblProgressStatus.Text = String.Format("Upgrade {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                        }));
                     }
                     else
                     {
@@ -673,15 +710,24 @@ namespace SystemUpgrade
                 {
                     updateProgressLog("(pre-process) execute user command", "Green");
 
+                    int count = 0;
                     foreach (UserCommand cmd in listSshCommand_Pre)
                     {
+                        count++;
                         if (!m_sshCommand.IsConnected)
                         {
                             throw new Exception("ssh disconnected");
                         }
 
                         m_sshShell.WriteLine(cmd.Cmd);
-                        updateProgressLog(String.Format("  {0}", cmd.Cmd), "Black");
+                        if (cmd.CmdDescription != "")
+                        {
+                            updateProgressLog(String.Format("    {0}", cmd.CmdDescription), "Black");
+                        }
+                        else
+                        {
+                            updateProgressLog(String.Format("    cmd: {0}/{1}", count, listSshCommand_Pre.Count), "Black");
+                        }
 
                         if (cmd.IsSudo)
                         {
@@ -692,7 +738,10 @@ namespace SystemUpgrade
                             Thread.Sleep(100);
                         }
 
-                        Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                        Dispatcher.Invoke(new Action(delegate () {
+                            progressStatus.Value++;
+                            lblProgressStatus.Text = String.Format("Upgrade {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                        }));
                     }
 
                     updateProgressLog("pre-process --> Done!!", "Green");
@@ -741,16 +790,25 @@ namespace SystemUpgrade
                 {
                     updateProgressLog("execute user command", "Green");
 
+                    int count = 0;
                     foreach (UserCommand cmd in listSshCommand)
                     {
+                        count++;
                         if (!m_sshCommand.IsConnected)
                         {
                             throw new Exception("ssh disconnected");
                         }
 
                         m_sshShell.WriteLine(cmd.Cmd);
-                        updateProgressLog(String.Format("  {0}", cmd.Cmd), "Black");
-                        
+                        if (cmd.CmdDescription != "")
+                        {
+                            updateProgressLog(String.Format("    {0}", cmd.CmdDescription), "Black");
+                        }
+                        else
+                        {
+                            updateProgressLog(String.Format("    cmd: {0}/{1}", count, listSshCommand.Count), "Black");
+                        }
+
                         if (cmd.IsSudo)
                         {
                             Thread.Sleep(500);
@@ -760,7 +818,10 @@ namespace SystemUpgrade
                             Thread.Sleep(100);
                         }
 
-                        Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                        Dispatcher.Invoke(new Action(delegate () {
+                            progressStatus.Value++;
+                            lblProgressStatus.Text = String.Format("Upgrade {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                        }));
                     }
 
                     updateProgressLog("execute --> Done!!", "Green");
@@ -808,16 +869,19 @@ namespace SystemUpgrade
 
                             if(file_info == null)
                             {
-                                updateProgressLog(String.Format("  file size check: no file - {0}", cmd.RemotePath), "Red");
+                                updateProgressLog(String.Format("    file: no file - {0}", cmd.RemotePath), "Red");
                             }
                             else if(file_info.Size == cmd.FileSize)
                             {
-                                updateProgressLog(String.Format("  file size check: {0}", cmd.RemotePath), "Black");
-                                Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                                updateProgressLog(String.Format("    file: {0}", cmd.RemotePath), "Black");
+                                Dispatcher.Invoke(new Action(delegate () {
+                                    progressStatus.Value++;
+                                    lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                                }));
                             }
                             else
                             {
-                                updateProgressLog(String.Format("  file size check: size error - {0}", cmd.RemotePath), "Red");
+                                updateProgressLog(String.Format("    file size check: size error - {0}", cmd.RemotePath), "Red");
                             }
                         }
                         else
@@ -841,17 +905,23 @@ namespace SystemUpgrade
                                 ((cmd.Type == UserCommand.CommandType.CMD_PASS_EXIT_POSITIVE) && command.ExitStatus > 0) ||
                                 ((cmd.Type == UserCommand.CommandType.CMD_PASS_EXIT_NEGATIVE) && command.ExitStatus < 0))
                             {
-                                updateProgressLog(String.Format("  cmd: {0}", cmd.Cmd), "Black");
-                                Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                                updateProgressLog(String.Format("    cmd: {0}", cmd.CmdDescription), "Black");
+                                Dispatcher.Invoke(new Action(delegate () {
+                                    progressStatus.Value++;
+                                    lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                                }));
                             }
                             else if ((cmd.Type == UserCommand.CommandType.CMD_PASS_EXIT_VALUE) && command.ExitStatus == cmd.ExitStatus)
                             {
-                                updateProgressLog(String.Format("  cmd: {0}", cmd.Cmd), "Black");
-                                Dispatcher.Invoke(new Action(delegate () { progressStatus.Value++; }));
+                                updateProgressLog(String.Format("    cmd: {0}", cmd.CmdDescription), "Black");
+                                Dispatcher.Invoke(new Action(delegate () {
+                                    progressStatus.Value++;
+                                    lblProgressStatus.Text = String.Format("Check {0}/{1}", progressStatus.Value, progressStatus.Maximum);
+                                }));
                             }
                             else
                             {
-                                updateProgressLog(String.Format("  cmd: {0}", cmd.Cmd), "Red");
+                                updateProgressLog(String.Format("    cmd: {0}", cmd.CmdDescription), "Red");
                                 updateProgressLog(String.Format("      exitStatus: {0}", command.ExitStatus), "Red");
                                 if (command.Error != "") updateProgressLog(String.Format("      error: {0}", command.Error), "Red");
                                 if (result!="") updateProgressLog(String.Format("      result: {0}",  result), "Red");
@@ -940,10 +1010,13 @@ namespace SystemUpgrade
             dialog.Filter = "Config File(*.xml)|*.xml";
             if (dialog.ShowDialog() == true)
             {
+                updateProgressLog_UI(String.Format("config: {0}", dialog.SafeFileName), "Blue");
                 if (LoadConfig(dialog.FileName))
                 {
-                    btnCheckUpgrade.IsEnabled = true;
-                    btnUpgradeDatas.IsEnabled = true;
+                    updateProgressLog_UI(String.Format("    upgrade: pre_process {0}, cmd {1}, files {2}",
+                        listSshCommand_Pre.Count, listSshCommand.Count,  listTxRxFile.Count), "Black");
+                    updateProgressLog_UI(String.Format("    check: {0}", listSshCheck.Count), "Black");
+                    StateActive();
                 }
             }
 
@@ -1059,26 +1132,38 @@ namespace SystemUpgrade
                 return;
             }
 
-            foreach (var selected_item in listRemoteFile.SelectedItems)
+            try
             {
-                UserFileInfo file_item = selected_item as UserFileInfo;
-                if(file_item.Name == "..")
+                foreach (var selected_item in listRemoteFile.SelectedItems)
                 {
-                    continue;
+                    UserFileInfo file_item = selected_item as UserFileInfo;
+                    if (file_item.Name == "..")
+                    {
+                        continue;
+                    }
+                    if (file_item.is_directory)
+                    {
+                        m_sftpClient.DeleteDirectory(remoteDirPath + "/" + file_item.Name);
+                    }
+                    else
+                    {
+                        m_sftpClient.DeleteFile(remoteDirPath + "/" + file_item.Name);
+                    }
                 }
-                if (file_item.is_directory)
-                {
-                    m_sftpClient.DeleteDirectory(remoteDirPath + "/" + file_item.Name);
-                }
-                else
-                {
-                    m_sftpClient.DeleteFile(remoteDirPath + "/" + file_item.Name);
-                }
+            }
+            catch (Exception ex)
+            {
+                updateProgressLog("delete: " + ex.Message, "Red");
             }
 
             loadRemoteDirList();
         }
 
+        private void listRemoteFileContextMenu_OnRefresh(object sender, RoutedEventArgs e)
+        {
+            loadRemoteDirList();
+        }
+        
         private void mainWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             windowMove = true;
@@ -1172,7 +1257,16 @@ namespace SystemUpgrade
         {
             txtProgressLog.Document.Blocks.Clear();
         }
-        
+
+        private void DebugOnOffExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            expenderDebug.IsEnabled = !expenderDebug.IsEnabled;
+            if(expenderDebug.IsEnabled == false)
+            {
+                expenderDebug.IsExpanded = false;
+            }
+            mainWindow.Focus();
+        }
     }
 
     public class UserConnInfo
@@ -1199,13 +1293,14 @@ namespace SystemUpgrade
             CMD_PASS_EXIT_NEGATIVE = 4,
             CMD_PASS_EXIT_VALUE = 5,
         };
-        public UserCommand(string cmd, bool sudo)
+        public UserCommand(string cmd, string description, bool sudo = false)
         {
             Cmd = cmd;
             IsSudo = sudo;
             Type = CommandType.CMD_EXEC;
+            CmdDescription = description;
         }
-        public UserCommand(string cmd, CommandType type, int exit_status = 0)
+        public UserCommand(string cmd, CommandType type, string description, int exit_status = 0)
         {
             Cmd = cmd;
             Type = type;
@@ -1214,12 +1309,14 @@ namespace SystemUpgrade
             {
                 ExitStatus = 0;
             }
+            CmdDescription = description;
         }
         public UserCommand(string remote_file, int file_size)
         {
             RemotePath = remote_file;
             FileSize = file_size;
             Type = CommandType.CHECK_SIZE;
+            CmdDescription = "";
         }
 
         public string Cmd { get; }
@@ -1227,6 +1324,7 @@ namespace SystemUpgrade
         public string RemotePath { get; }
         public int FileSize { get; }
         public int ExitStatus { get; }
+        public string CmdDescription { get; set; }
         public CommandType Type { get; }
     }
 
@@ -1325,7 +1423,7 @@ namespace SystemUpgrade
         public string Size { get; set; }
         public BitmapImage Image { get; }
         public bool valid_file { get; }
-        public string Tooltip { get; set; }
+        public string Tooltip { get; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

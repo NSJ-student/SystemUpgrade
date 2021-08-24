@@ -6,7 +6,7 @@
         xmlns:ac="clr-namespace:AdornedControl;assembly=AdornedControl"
         xmlns:local="clr-namespace:SystemUpgrade"
         mc:Ignorable="d"
-        Title="MainWindow" Height="640" Width="575" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen" Icon="Resources/firmware.png">
+        Title="MainWindow" Height="640" Width="600" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen" Icon="Resources/firmware.png" MinHeight="480">
 
     <Grid Margin="10,0,10,10" Background="Transparent">
         <Grid.RowDefinitions>
@@ -19,9 +19,9 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button x:Name="btnWindowClose" Content="" 
-                    HorizontalAlignment="Right" Margin="0,0,-10,0" Width="45" Height="30" Grid.Column="1" 
+                    HorizontalAlignment="Right" Margin="0,0,-5,0" Height="30" Grid.Column="1" 
                     BorderThickness="0" Click="btnWindowClose_Click" Padding="0" VerticalAlignment="Top"
-                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Width="30">
                 <Button.Background>
                     <ImageBrush ImageSource="Resources/close.png" Stretch="Uniform"/>
                 </Button.Background>
@@ -64,7 +64,7 @@
                     </ListView.ItemContainerStyle>
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Name" Width="200">
+                            <GridViewColumn Header="File Name" Width="200">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -81,7 +81,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Progress" Width="200">
+                            <GridViewColumn Header="Progress" Width="220">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <ProgressBar Maximum="100" Height="20" Width="200" Value="{Binding Progress}"/>
@@ -96,6 +96,7 @@
                     <Button x:Name="btnUpgradeDatas" Content="Upgrade" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnUpgradeDatas_Click" Height="25"/>
                     <Button x:Name="btnCheckUpgrade" Content="Check" Width="80" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="10,0,0,0" Click="btnCheckUpgrade_Click" Height="25"/>
                     <ProgressBar x:Name="progressStatus" Margin="20,0,0,0" Height="25" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="lblProgressStatus" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="5,0,0,0"/>
                 </StackPanel>
                 <Rectangle Fill="#FFBFBFBF" Height="3" VerticalAlignment="Top" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5" Grid.Row="1" Margin="10,15,10,0">
                     <Rectangle.RenderTransform>
@@ -115,7 +116,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="15*"/>
                         </Grid.RowDefinitions>
-                        <Label Content="SSH" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" FontFamily="Arial Black" FontWeight="Bold"/>
+                        <Label Content="SSH" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
                         <TextBox x:Name="txtSshLog" FontFamily="Consolas" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" Margin="10,5,0,0" Padding="0" TextInput="txtSshLog_TextInput" PreviewKeyDown="txtSshLog_PreviewKeyDown" Background="Black" Foreground="White" Grid.Row="1">
                             <TextBox.ContextMenu>
                                 <ContextMenu>
@@ -123,11 +124,12 @@
                                 </ContextMenu>
                             </TextBox.ContextMenu>
                         </TextBox>
-                        <Label Content="Remote Files" HorizontalAlignment="Left" Margin="10,15,10,0" Grid.Row="2" VerticalAlignment="Top" FontFamily="Arial Black" FontWeight="Bold"/>
+                        <Label Content="Remote Files" HorizontalAlignment="Left" Margin="10,15,10,0" Grid.Row="2" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
                         <ListView x:Name="listRemoteFile" Grid.Row="3" Margin="10,5,0,0">
                             <ListView.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Delete" Click="listRemoteFileContextMenu_OnDelete"/>
+                                    <MenuItem Header="Refresh" Click="listRemoteFileContextMenu_OnRefresh"/>
                                 </ContextMenu>
                             </ListView.ContextMenu>
                             <ListView.ItemContainerStyle>
@@ -161,7 +163,7 @@
                         </ListView>
                     </Grid>
                 </Expander>
-                <Label Content="Upgrade Files" HorizontalAlignment="Left" Margin="10,20,0,0" Grid.Row="4" VerticalAlignment="Top" FontFamily="Arial Black" FontWeight="Bold"/>
+                <Label Content="Upgrade Files" HorizontalAlignment="Left" Margin="10,20,0,0" Grid.Row="4" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
                 <RichTextBox x:Name="txtProgressLog" 
                              Grid.Row="7" Margin="10,5,5,10" 
                              FontFamily="Consolas" IsReadOnly="True" 
@@ -177,7 +179,7 @@
                         <Paragraph/>
                     </FlowDocument>
                 </RichTextBox>
-                <Label Content="Message Log" HorizontalAlignment="Left" Margin="10,20,0,0" Grid.Row="6" VerticalAlignment="Top" FontFamily="Arial Black" FontWeight="Bold"/>
+                <Label Content="Message Log" HorizontalAlignment="Left" Margin="10,20,0,0" Grid.Row="6" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
             </Grid>
         </ac:AdornedControl>
     </Grid>

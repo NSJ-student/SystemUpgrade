@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <list>
+	<config>GM FPD-Link4 (DSI 2CH)</config>
+	
 	<pre_cmds>
   	<cmd>cd ~/Desktop</cmd>
 	</pre_cmds>
@@ -22,17 +24,19 @@
   	<cmd>kill $PID_APP</cmd>
 	</pre_cmds>
 	
+	<!---
 	<libs>
 	  <lib>libgtk.tar</lib>
 	  <size>5611520</size>
 	</libs>
 	<libs>
-	  <lib>libvlc4.tar</lib>
-	  <size>85504000</size>
-	</libs>
-	<libs>
 	  <lib>DISP_2CH_CTRL_3_9_8</lib>
 	  <size>1101256</size>
+	</libs>
+	-->
+	<libs>
+	  <lib>libvlc4.tar</lib>
+	  <size>85504000</size>
 	</libs>
 	<libs>
 	  <lib>DISP_2CH_CTRL_3_9_10</lib>
@@ -42,6 +46,10 @@
 	  <lib>RemoteUpgrade_2_1_1</lib>
 	  <size>134928</size>
 	</libs>
+	<libs>
+	  <lib>LICENSE.GPL3</lib>
+	  <size>36174</size>
+	</libs>
 	
 	<cmds>  	<cmd>ll</cmd>	</cmds>
 	<cmds>  	<cmd>mv DISP_2CH_CTRL_3_9_10 DISP_CTRL</cmd>	</cmds>
@@ -50,8 +58,8 @@
 	<cmds>  	<cmd>chmod 766 RemoteUpgrade</cmd>	</cmds>
 	<cmds>  	<cmd>tar -xf libvlc4.tar</cmd>	</cmds>
 	<cmds> 		<cmd>rm libvlc4.tar</cmd> 			</cmds>
-	<cmds>  	<cmd>tar -xf libgtk.tar</cmd>	</cmds>
 	<!---
+	<cmds>  	<cmd>tar -xf libgtk.tar</cmd>	</cmds>
 	<cmds>  	<cmd>cd libgtk</cmd>	</cmds>
 	<cmds>  	<cmd>sudo dpkg -i dconf-gsettings-backend_0.26.0-2ubuntu3_arm64.deb</cmd>	</cmds>
 	<cmds>  	<cmd>sudo dpkg -i gir1.2-gtk-3.0_3.22.30-1ubuntu4_arm64.deb</cmd>	</cmds>
@@ -80,11 +88,16 @@
 	<cmds>  	<cmd>sudo dpkg -i libgtk-3-common_3.22.30-1ubuntu4_all.deb</cmd>	</cmds>
 	<cmds>  	<cmd>sudo dpkg -i libgtk-3-dev_3.22.30-1ubuntu4_arm64.deb</cmd>	</cmds>
 	<cmds>  	<cmd>cd ..</cmd>	</cmds>
-	-->
 	<cmds> 		<cmd>rm libgtk.tar</cmd> 			</cmds>
+	-->
 	<cmds>  	<cmd>ll</cmd>	</cmds>
 	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 ~/Desktop/RemoteUpgrade'</cmd>	</cmds>
 	
+	<check>
+		<type>1</type>
+	  <file>LICENSE.GPL3</file>
+	  <size>36174</size>
+	</check>
 	<check>
 		<type>1</type>
 	  <file>DISP_CTRL</file>
@@ -97,11 +110,13 @@
 	</check>
 	<check>
 		<type>5</type>
+		<cmd_desc>RemoteUpgrade library check</cmd_desc>
 	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not found"</cmd>
 	  <exit_status>1</exit_status>
 	</check>
 	<check>
 		<type>5</type>
+		<cmd_desc>DISP_CTRL library check</cmd_desc>
 	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not found"</cmd>
 	  <exit_status>1</exit_status>
 	</check>

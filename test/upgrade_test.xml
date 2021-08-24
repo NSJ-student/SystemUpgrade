@@ -27,6 +27,7 @@
   	<cmd>mkdir test</cmd>
 	</cmds>
 	
+	<!--
 	<check>
 		<type>1</type>
 	  <file>DISP_CTRL</file>
@@ -47,7 +48,6 @@
 	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not found"</cmd>
 	  <exit_status>1</exit_status>
 	</check>
-	<!--
 	<check>
 		<type>2</type>
 	  <cmd>pidof test</cmd>
