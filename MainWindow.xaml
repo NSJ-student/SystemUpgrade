@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="640" Width="600" WindowStyle="None" MouseLeftButtonDown="mainWindow_MouseLeftButtonDown" MouseMove="mainWindow_MouseMove" ResizeMode="CanResizeWithGrip" MouseLeftButtonUp="mainWindow_MouseLeftButtonUp" MouseLeave="mainWindow_MouseLeave" Background="#B2D7D7D7" AllowsTransparency="True" MinWidth="530" WindowStartupLocation="CenterScreen" Icon="Resources/firmware.png" MinHeight="480">
 
-    <Grid Margin="10,0,10,10" Background="Transparent">
+    <Grid Margin="0" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="17*"/>
@@ -19,11 +19,11 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button x:Name="btnWindowClose" Content="" 
-                    HorizontalAlignment="Right" Margin="0,0,-5,0" Height="30" Grid.Column="1" 
-                    BorderThickness="0" Click="btnWindowClose_Click" Padding="0" VerticalAlignment="Top"
-                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Width="30">
+                    HorizontalAlignment="Right" Margin="0,5,5,5" Grid.Column="1" 
+                    BorderThickness="0" Click="btnWindowClose_Click" Padding="0" VerticalAlignment="Center"
+                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Width="30" Height="25">
                 <Button.Background>
-                    <ImageBrush ImageSource="Resources/close.png" Stretch="Uniform"/>
+                    <ImageBrush ImageSource="Resources/close2.png" Stretch="Uniform"/>
                 </Button.Background>
             </Button>
         </Grid>
@@ -33,7 +33,13 @@
                 <local:LoadingWait></local:LoadingWait>
             </ac:AdornedControl.AdornerContent>
 
-            <Grid x:Name="gridMainControls" Margin="0" Background="White">
+            <Grid x:Name="gridMainControls" Margin="0">
+                <Grid.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="White" Offset="0"/>
+                        <GradientStop Color="#FFEAE7E7" Offset="1"/>
+                    </LinearGradientBrush>
+                </Grid.Background>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="400*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -48,13 +54,13 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="40*"/>
                 </Grid.RowDefinitions>
-                <WrapPanel Orientation="Horizontal" Margin="10,10,10,0" Grid.ColumnSpan="2">
+                <WrapPanel Orientation="Horizontal" Margin="30,10,30,0" Grid.ColumnSpan="2">
                     <RadioButton x:Name="rbGmSimSel" Content="GM Simulator" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
                     <RadioButton x:Name="rbGmSimDevSel" Content="GM Simulator Dev" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
                     <RadioButton x:Name="rbTest" Content="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0"/>
                     <Button x:Name="btnConnect" Content="CONNECT" Width="75" VerticalAlignment="Center" Margin="25,5,0,5" HorizontalAlignment="Center" Click="btnConnect_Click" Height="25"/>
                 </WrapPanel>
-                <ListView x:Name="listLocalFile" Grid.Row="5" Margin="10,5,5,0">
+                <ListView x:Name="listLocalFile" Grid.Row="5" Margin="30,5,0,0">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
@@ -91,7 +97,7 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <StackPanel x:Name="stackButtons" Orientation="Horizontal" Grid.Row="2" Margin="20,20,0,0" HorizontalAlignment="Left">
+                <StackPanel x:Name="stackButtons" Orientation="Horizontal" Grid.Row="2" Margin="30,20,0,0" HorizontalAlignment="Left">
                     <Button x:Name="btnLoadDatas" Content="Load" Width="75" VerticalAlignment="Center" HorizontalAlignment="Left" Click="btnLoadDatas_Click" Height="25"/>
                     <Button x:Name="btnUpgradeDatas" Content="Upgrade" Width="75" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="5,0,0,0" Click="btnUpgradeDatas_Click" Height="25"/>
                     <Button x:Name="btnCheckUpgrade" Content="Check" Width="75" VerticalAlignment="Center" HorizontalAlignment="Left" IsEnabled="False" Margin="5,0,0,0" Click="btnCheckUpgrade_Click" Height="25"/>
@@ -99,7 +105,7 @@
                     <Image x:Name="imageResult" Width="15" Height="15" Margin="5,0,0,0"/>
                     <TextBlock x:Name="lblProgressStatus" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"/>
                 </StackPanel>
-                <Rectangle Fill="#FFBFBFBF" Height="3" VerticalAlignment="Top" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5" Grid.Row="1" Margin="10,15,10,0">
+                <Rectangle Fill="#FFBFBFBF" Height="3" VerticalAlignment="Top" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5" Grid.Row="1" Margin="30,15,30,0">
                     <Rectangle.RenderTransform>
                         <TransformGroup>
                             <ScaleTransform ScaleY="-1"/>
@@ -109,7 +115,7 @@
                         </TransformGroup>
                     </Rectangle.RenderTransform>
                 </Rectangle>
-                <Expander x:Name="expenderDebug" Header="" Grid.Row="2" ExpandDirection="Right" Grid.RowSpan="6" Grid.Column="1" Expanded="expenderDebug_Expanded" Collapsed="expenderDebug_Collapsed" Margin="0,10,10,10">
+                <Expander x:Name="expenderDebug" Header="" Grid.Row="2" ExpandDirection="Right" Grid.RowSpan="6" Grid.Column="1" Expanded="expenderDebug_Expanded" Collapsed="expenderDebug_Collapsed" Margin="0,10,30,10">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -164,9 +170,9 @@
                         </ListView>
                     </Grid>
                 </Expander>
-                <Label Content="Upgrade Files" HorizontalAlignment="Left" Margin="10,20,0,0" Grid.Row="4" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
+                <Label Content="Upgrade Files" HorizontalAlignment="Left" Margin="30,20,0,0" Grid.Row="4" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
                 <RichTextBox x:Name="txtProgressLog" 
-                             Grid.Row="7" Margin="10,5,5,10" 
+                             Grid.Row="7" Margin="30,5,0,10" 
                              FontFamily="Consolas" IsReadOnly="True" 
                              HorizontalScrollBarVisibility="Auto" 
                              VerticalScrollBarVisibility="Auto" 
@@ -180,7 +186,7 @@
                         <Paragraph/>
                     </FlowDocument>
                 </RichTextBox>
-                <Label Content="Message Log" HorizontalAlignment="Left" Margin="10,20,0,0" Grid.Row="6" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
+                <Label Content="Message Log" HorizontalAlignment="Left" Margin="30,20,0,0" Grid.Row="6" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
             </Grid>
         </ac:AdornedControl>
     </Grid>

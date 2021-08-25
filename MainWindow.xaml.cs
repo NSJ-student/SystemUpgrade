@@ -42,6 +42,7 @@ namespace SystemUpgrade
         Thread connectThread;
         ulong uploadFileLength;
         string remoteDirPath;
+        string baseDirPath;
 
         // for SSH command
         SshClient m_sshCommand;
@@ -75,6 +76,7 @@ namespace SystemUpgrade
             listTxRxFile = new List<UserTxRxInfo>();
             listLocalFile.ItemsSource = listTxRxFile;
             remoteDirPath = "";
+            baseDirPath = "";
             currentUploadItem = null;
 
             listSshCommand_Pre = new List<UserCommand>();
@@ -242,6 +244,17 @@ namespace SystemUpgrade
                     }
 
                     updateProgressLog_UI(String.Format("    config: {0}", config_elements.Value), "Black");
+
+                    var base_dir = xdoc.Root.Element("base_dir");
+                    if (base_dir != null)
+                    {
+                        baseDirPath = base_dir.Value;
+                        if (m_sftpClient.Exists(baseDirPath))
+                        {
+                            m_sftpClient.ChangeDirectory(baseDirPath);
+                            remoteDirPath = m_sftpClient.WorkingDirectory;
+                        }
+                    }
 
                     // get library list
                     var xelements = xdoc.Root.Elements("libs");
@@ -541,8 +554,11 @@ namespace SystemUpgrade
                     throw new Exception("sftp connect failed");
                 }
 
-                Dispatcher.Invoke(delegate () { 
-                    m_sftpClient.ChangeDirectory(m_sftpClient.WorkingDirectory + "/Desktop");
+                Dispatcher.Invoke(delegate () {
+                    if(m_sftpClient.Exists(m_sftpClient.WorkingDirectory + "/Desktop"))
+                    {
+                        m_sftpClient.ChangeDirectory(m_sftpClient.WorkingDirectory + "/Desktop");
+                    }
                     remoteDirPath = m_sftpClient.WorkingDirectory;
                     loadRemoteDirList();
                 });
@@ -880,7 +896,7 @@ namespace SystemUpgrade
 
                             if(!m_sftpClient.Exists(cmd.RemotePath))
                             {
-                                updateProgressLog(String.Format("    file: no such file - {0}", cmd.RemotePath), "Red");
+                                updateProgressLog(String.Format("    file: no such file - {0}", System.IO.Path.GetFileName(cmd.RemotePath)), "Red");
                                 failed++;
                             }
                             else
@@ -888,14 +904,14 @@ namespace SystemUpgrade
                                 SftpFileAttributes file_info = m_sftpClient.GetAttributes(cmd.RemotePath);
                                 if (file_info.Size == cmd.FileSize)
                                 {
-                                    updateProgressLog(String.Format("    file: {0}", cmd.RemotePath), "Black");
+                                    updateProgressLog(String.Format("    file: {0}", System.IO.Path.GetFileName(cmd.RemotePath)), "Black");
                                     Dispatcher.Invoke(new Action(delegate () {
                                         progressStatus.Value++;
                                     }));
                                 }
                                 else
                                 {
-                                    updateProgressLog(String.Format("    file size check: size error - {0}", cmd.RemotePath), "Red");
+                                    updateProgressLog(String.Format("    file size check: size error - {0}", System.IO.Path.GetFileName(cmd.RemotePath)), "Red");
                                     failed++;
                                 }
                             }
@@ -1405,7 +1421,6 @@ namespace SystemUpgrade
             if (file.Exists)
             {
                 if (expected_size == file.Length)
-
                 {
                     Image = new BitmapImage(new Uri("pack://application:,,,/Resources/checked.png"));
                     Name = file.Name;

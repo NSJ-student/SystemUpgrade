@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<list>
+	<config>GM FPD-Link3 (HDMI 1CH)</config>
+	<base_dir>/home/sujin/Desktop/</base_dir>
+	
+	<pre_cmds>
+  	<cmd>cd ~/Desktop</cmd>
+	</pre_cmds>
+	<pre_cmds>
+  	<cmd>rm -r libvlc</cmd>
+	</pre_cmds>
+	<pre_cmds>
+  	<cmd>rm -r libgtk</cmd>
+	</pre_cmds>
+	<pre_cmds>
+  	<cmd>PID_APP=`pidof ~/Desktop/DISP_CTRL`</cmd>
+	</pre_cmds>
+	<pre_cmds>
+  	<cmd>PID_UPGRADE=`pidof ~/Desktop/RemoteUpgrade`</cmd>
+	</pre_cmds>
+	<pre_cmds>
+  	<cmd>kill $PID_UPGRADE</cmd>
+	</pre_cmds>
+	<pre_cmds>
+  	<cmd>kill $PID_APP</cmd>
+	</pre_cmds>
+	
+	<!---
+	<libs>
+	  <lib>libgtk.tar</lib>
+	  <size>5611520</size>
+	</libs>
+	<libs>
+	  <lib>DISP_2CH_CTRL_3_9_8</lib>
+	  <size>1101256</size>
+	</libs>
+	-->
+	<libs>
+	  <lib>libvlc4.tar</lib>
+	  <size>85504000</size>
+	</libs>
+	<libs>
+	  <lib>DISP_CTRL_3_1_0</lib>
+	  <size>740304</size>
+	</libs>
+	<libs>
+	  <lib>RemoteUpgrade_2_1_1</lib>
+	  <size>134928</size>
+	</libs>
+	<libs>
+	  <lib>LICENSE.GPL3</lib>
+	  <size>36174</size>
+	</libs>
+	
+	<cmds>  	<cmd>ll</cmd>	</cmds>
+	<cmds>  	<cmd>mv DISP_CTRL_3_1_0 DISP_CTRL</cmd>	</cmds>
+	<cmds>  	<cmd>chmod 766 DISP_CTRL</cmd>	</cmds>
+	<cmds>  	<cmd>mv RemoteUpgrade_2_1_1 RemoteUpgrade</cmd>	</cmds>
+	<cmds>  	<cmd>chmod 766 RemoteUpgrade</cmd>	</cmds>
+	<cmds>  	<cmd>tar -xf libvlc4.tar</cmd>	</cmds>
+	<cmds> 		<cmd>rm libvlc4.tar</cmd> 			</cmds>
+	<cmds>  	<cmd>ll</cmd>	</cmds>
+	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 ~/Desktop/RemoteUpgrade'</cmd>	</cmds>
+	
+	<check>
+		<type>1</type>
+	  <file>LICENSE.GPL3</file>
+	  <size>36174</size>
+	</check>
+	<check>
+		<type>1</type>
+	  <file>DISP_CTRL</file>
+	  <size>740304</size>
+	</check>
+	<check>
+		<type>1</type>
+	  <file>RemoteUpgrade</file>
+	  <size>134928</size>
+	</check>
+	<check>
+		<type>5</type>
+		<cmd_desc>RemoteUpgrade library check</cmd_desc>
+	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not"</cmd>
+	  <exit_status>1</exit_status>
+	</check>
+	<check>
+		<type>5</type>
+		<cmd_desc>DISP_CTRL library check</cmd_desc>
+	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not"</cmd>
+	  <exit_status>1</exit_status>
+	</check>
+</list>

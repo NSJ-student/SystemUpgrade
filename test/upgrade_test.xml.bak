@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<list>
+  <config>test</config>
+	<base_dir>~/Desktop/</base_dir>
+  
+	<libs>
+	  <lib>libgtk.tar</lib>
+	  <size>5611520</size>
+	</libs>
+	<libs>
+	  <lib>libvlc4.tar</lib>
+	  <size>85504000</size>
+	</libs>
+
+  <cmds>
+    <cmd>cd ~/Desktop</cmd>
+  </cmds>
+	<cmds>
+  	<cmd>ls -alt</cmd>
+  	<sudo>true</sudo>
+	</cmds>
+	<cmds>
+  	<cmd>sudo su</cmd>
+  	<sudo>true</sudo>
+	</cmds>
+	<cmds>
+  	<cmd>rm -r test</cmd>
+	</cmds>
+	<cmds>
+  	<cmd>mkdir test</cmd>
+	</cmds>
+	
+	<check>
+		<type>1</type>
+	  <file>libgtk.tar</file>
+	  <size>5611520</size>
+	</check>
+	<check>
+		<type>1</type>
+	  <file>libvlc4.tar</file>
+	  <size>85504000</size>
+	</check>
+	
+</list>

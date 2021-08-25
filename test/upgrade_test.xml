@@ -1,13 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <list>
   <config>test</config>
+	<base_dir>/home/sujin/Desktop/</base_dir>
   
 	<libs>
 	  <lib>libgtk.tar</lib>
 	  <size>5611520</size>
 	</libs>
 	<libs>
-	  <lib>libvlc_R32_5.tar</lib>
+	  <lib>libvlc4.tar</lib>
 	  <size>85504000</size>
 	</libs>
 
@@ -29,30 +30,15 @@
   	<cmd>mkdir test</cmd>
 	</cmds>
 	
-	<!--
 	<check>
 		<type>1</type>
-	  <file>DISP_CTRL</file>
-	  <size>1054496</size>
+	  <file>libgtk.tar</file>
+	  <size>5611520</size>
 	</check>
 	<check>
 		<type>1</type>
-	  <file>RemoteUpgrade</file>
-	  <size>134928</size>
+	  <file>libvlc4.tar</file>
+	  <size>85504000</size>
 	</check>
-	<check>
-		<type>5</type>
-	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not found"</cmd>
-	  <exit_status>1</exit_status>
-	</check>
-	<check>
-		<type>5</type>
-	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not found"</cmd>
-	  <exit_status>1</exit_status>
-	</check>
-	<check>
-		<type>2</type>
-	  <cmd>pidof test</cmd>
-	</check>
-	-->
+	
 </list>
