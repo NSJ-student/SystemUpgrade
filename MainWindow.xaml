@@ -21,7 +21,7 @@
             <Button x:Name="btnWindowClose" Content="" 
                     HorizontalAlignment="Right" Margin="0,5,5,5" Grid.Column="1" 
                     BorderThickness="0" Click="btnWindowClose_Click" Padding="0" VerticalAlignment="Center"
-                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Width="30" Height="25">
+                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Width="30" Height="20">
                 <Button.Background>
                     <ImageBrush ImageSource="Resources/close2.png" Stretch="Uniform"/>
                 </Button.Background>
@@ -57,7 +57,7 @@
                 <WrapPanel Orientation="Horizontal" Margin="30,10,30,0" Grid.ColumnSpan="2">
                     <RadioButton x:Name="rbGmSimSel" Content="GM Simulator" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
                     <RadioButton x:Name="rbGmSimDevSel" Content="GM Simulator Dev" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
-                    <RadioButton x:Name="rbTest" Content="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    <RadioButton x:Name="rbTest" Content="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="Hidden"/>
                     <Button x:Name="btnConnect" Content="CONNECT" Width="75" VerticalAlignment="Center" Margin="25,5,0,5" HorizontalAlignment="Center" Click="btnConnect_Click" Height="25"/>
                 </WrapPanel>
                 <ListView x:Name="listLocalFile" Grid.Row="5" Margin="30,5,0,0">
@@ -115,24 +115,24 @@
                         </TransformGroup>
                     </Rectangle.RenderTransform>
                 </Rectangle>
-                <Expander x:Name="expenderDebug" Header="" Grid.Row="2" ExpandDirection="Right" Grid.RowSpan="6" Grid.Column="1" Expanded="expenderDebug_Expanded" Collapsed="expenderDebug_Collapsed" Margin="0,10,30,10">
-                    <Grid>
+                <Expander x:Name="expenderDebug" Header="DBG" Grid.Row="2" ExpandDirection="Right" Grid.RowSpan="6" Grid.Column="1" Expanded="expenderDebug_Expanded" Collapsed="expenderDebug_Collapsed" Margin="0,10,10,10" FontSize="8" Visibility="Hidden">
+                    <Grid Margin="0,0,20,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="40*"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="15*"/>
                         </Grid.RowDefinitions>
-                        <Label Content="SSH" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
-                        <TextBox x:Name="txtSshLog" FontFamily="Consolas" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" Margin="10,5,0,0" Padding="0" TextInput="txtSshLog_TextInput" PreviewKeyDown="txtSshLog_PreviewKeyDown" Background="Black" Foreground="White" Grid.Row="1">
+                        <Label Content="SSH" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold" FontSize="12"/>
+                        <TextBox x:Name="txtSshLog" FontFamily="Consolas" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" MinWidth="0" Margin="10,5,0,0" Padding="0" TextInput="txtSshLog_TextInput" PreviewKeyDown="txtSshLog_PreviewKeyDown" Background="Black" Foreground="White" Grid.Row="1" FontSize="12">
                             <TextBox.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Clear" Click="MenuItem_Click"/>
                                 </ContextMenu>
                             </TextBox.ContextMenu>
                         </TextBox>
-                        <Label Content="Remote Files" HorizontalAlignment="Left" Margin="10,15,10,0" Grid.Row="2" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold"/>
-                        <ListView x:Name="listRemoteFile" Grid.Row="3" Margin="10,5,0,0">
+                        <Label Content="Remote Files" HorizontalAlignment="Left" Margin="10,15,10,0" Grid.Row="2" VerticalAlignment="Top" FontFamily="Malgun Gothic" FontWeight="Bold" FontSize="12"/>
+                        <ListView x:Name="listRemoteFile" Grid.Row="3" Margin="10,5,0,0" FontSize="12">
                             <ListView.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Delete" Click="listRemoteFileContextMenu_OnDelete"/>

@@ -88,7 +88,6 @@ namespace SystemUpgrade
             DebugOnOff.InputGestures.Add(new KeyGesture(Key.G, ModifierKeys.Control));
             CommandBindings.Add(new CommandBinding(DebugOnOff, DebugOnOffExecuted));
 
-            expenderDebug.VerticalAlignment = VerticalAlignment.Center;
             StateDisconnected_ClearAll();
         }
 
@@ -850,6 +849,7 @@ namespace SystemUpgrade
                     }
 
                     updateProgressLog("execute --> Done!!", "Green");
+                    updateProgressLog("upgrade complete!!", "Blue");
                     Dispatcher.Invoke(new Action(delegate () {
                         imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/checked.png"));
                         StateActive();
@@ -1255,7 +1255,6 @@ namespace SystemUpgrade
         {
             ColumnDefinitionCollection columns = gridMainControls.ColumnDefinitions;
             columns[1].Width = new GridLength(1, GridUnitType.Auto);
-            expenderDebug.VerticalAlignment = VerticalAlignment.Center;
 
             Width -= 400;
         }
@@ -1264,7 +1263,6 @@ namespace SystemUpgrade
         {
             ColumnDefinitionCollection columns = gridMainControls.ColumnDefinitions;
             columns[1].Width = new GridLength(400, GridUnitType.Star);
-            expenderDebug.VerticalAlignment = VerticalAlignment.Stretch;
 
             Width += 400;
         }
@@ -1312,6 +1310,13 @@ namespace SystemUpgrade
             if(expenderDebug.IsEnabled == false)
             {
                 expenderDebug.IsExpanded = false;
+                expenderDebug.Visibility = Visibility.Hidden;
+                rbTest.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                expenderDebug.Visibility = Visibility.Visible;
+                rbTest.Visibility = Visibility.Visible;
             }
             mainWindow.Focus();
         }
