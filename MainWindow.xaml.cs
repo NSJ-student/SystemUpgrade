@@ -71,6 +71,7 @@ namespace SystemUpgrade
             listConnInfo = new List<UserConnInfo>();
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "roqkfdmfwkfgkwk!"));
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "nvidia"));
+            listConnInfo.Add(new UserConnInfo("192.168.20.193", "mik21", "nvidia"));
             listConnInfo.Add(new UserConnInfo("192.168.0.100",  "sujin", "sujin1234"));
 
             listTxRxFile = new List<UserTxRxInfo>();
@@ -101,8 +102,9 @@ namespace SystemUpgrade
             btnCheckUpgrade.IsEnabled = false;
             btnUpgradeDatas.IsEnabled = false;
 
-            rbGmSimDevSel.IsEnabled = false;
-            rbGmSimSel.IsEnabled = false;
+            rbGmDsiLeftSel.IsEnabled = false;
+            rbGmDsiRightSel.IsEnabled = false;
+            rbGmHdmiSel.IsEnabled = false;
             rbTest.IsEnabled = false;
 
             btnConnect.Content = "Close";
@@ -128,8 +130,9 @@ namespace SystemUpgrade
             listSshCheck.Clear();
 
             // control UI
-            rbGmSimDevSel.IsEnabled = true;
-            rbGmSimSel.IsEnabled = true;
+            rbGmDsiLeftSel.IsEnabled = true;
+            rbGmDsiRightSel.IsEnabled = true;
+            rbGmHdmiSel.IsEnabled = true;
             rbTest.IsEnabled = true;
 
             stackButtons.IsEnabled = false;
@@ -383,7 +386,17 @@ namespace SystemUpgrade
                                 continue;
                             }
 
-                            string remote_path = m_sftpClient.WorkingDirectory + "/" + file_element.Value;
+                            string remote_path = "";
+                            XElement dir_element = xList.Element("dir");
+                            if (dir_element == null)
+                            {
+                                remote_path = m_sftpClient.WorkingDirectory + "/" + file_element.Value;
+                            }
+                            else
+                            {
+                                remote_path = dir_element.Value + "/" + file_element.Value;
+                            }
+
                             listSshCheck.Add(new UserCommand(remote_path, Convert.ToInt32(size_element.Value)));
                         }
                         else if ((type == (int)UserCommand.CommandType.CMD_PASS_EXIT_ZERO) || 
@@ -439,8 +452,9 @@ namespace SystemUpgrade
         {
             UserConnInfo info = listConnInfo.ElementAt(0);
 
-            if (rbGmSimDevSel.IsChecked == true) info = listConnInfo.ElementAt(1);
-            if (rbTest.IsChecked == true) info = listConnInfo.ElementAt(2);
+            if (rbGmDsiLeftSel.IsChecked == true) info = listConnInfo.ElementAt(1);
+            if (rbGmDsiRightSel.IsChecked == true) info = listConnInfo.ElementAt(2);
+            if (rbTest.IsChecked == true) info = listConnInfo.ElementAt(3);
 
             currentConnInfo = info;
             return info;
@@ -598,15 +612,20 @@ namespace SystemUpgrade
             {
                 try
                 {
-                    if (m_sshCommand != null)
+                    if ((m_sshCommand != null) && (m_sshShell != null) && (m_sftpClient != null))
                     {
-                        if (m_sshShell != null && m_sshShell.DataAvailable)
+                        if (!m_sshCommand.IsConnected)
                         {
-                            if (!m_sshCommand.IsConnected)
-                            {
-                                throw new Exception("ssh disconnected");
-                            }
+                            throw new Exception("ssh disconnected");
+                        }
 
+                        if (!m_sftpClient.IsConnected)
+                        {
+                            throw new Exception("sftp disconnected");
+                        }
+
+                        while (m_sshShell.DataAvailable)
+                        {
                             string strData = m_sshShell.Read();
                             string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
                             string pattern = String.Format("[sudo] password for {0}: ", currentConnInfo.UserName);
@@ -633,6 +652,11 @@ namespace SystemUpgrade
                                 m_sshShell.WriteLine(currentConnInfo.Password);
                             }
                         }
+                        Thread.Sleep(1);
+                    }
+                    else
+                    {
+                        throw new Exception("ssh instance null");
                     }
                 }
                 catch (Exception ex)
@@ -1010,11 +1034,11 @@ namespace SystemUpgrade
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
 
-            if (((m_sftpClient != null) && m_sftpClient.IsConnected) &&
+            if (((m_sftpClient != null) && m_sftpClient.IsConnected) ||
                 ((m_sshCommand != null) && m_sshCommand.IsConnected))
             {
-                m_sshCommand.Disconnect();
-                m_sftpClient.Disconnect();
+                if (m_sftpClient != null)  m_sshCommand.Disconnect();
+                if (m_sshCommand != null)  m_sftpClient.Disconnect();
 
                 StateDisconnected_ClearAll();
             }
@@ -1031,12 +1055,13 @@ namespace SystemUpgrade
 
                     // ssh
                     m_sshCommand = new SshClient(info.Host, 22, info.UserName, info.Password);
-                    m_sshCommand.ConnectionInfo.Timeout = TimeSpan.FromSeconds(30);
+                    m_sshCommand.KeepAliveInterval = TimeSpan.FromSeconds(1);
+                    m_sshCommand.ConnectionInfo.Timeout = TimeSpan.FromSeconds(60);
 
                     // sftp
                     m_sftpClient = new SftpClient(info.Host, 22, info.UserName, info.Password);
-                    m_sftpClient.KeepAliveInterval = TimeSpan.FromSeconds(60);
-                    m_sftpClient.ConnectionInfo.Timeout = TimeSpan.FromMinutes(180);
+                    m_sftpClient.KeepAliveInterval = TimeSpan.FromSeconds(1);
+                    m_sftpClient.ConnectionInfo.Timeout = TimeSpan.FromSeconds(60);
                     m_sftpClient.OperationTimeout = TimeSpan.FromMinutes(180);
 
                     connectThread = new Thread(() => connectThreadFunc());

@@ -55,8 +55,9 @@
                     <RowDefinition Height="40*"/>
                 </Grid.RowDefinitions>
                 <WrapPanel Orientation="Horizontal" Margin="30,10,30,0" Grid.ColumnSpan="2">
-                    <RadioButton x:Name="rbGmSimSel" Content="GM Simulator" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
-                    <RadioButton x:Name="rbGmSimDevSel" Content="GM Simulator Dev" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
+                    <RadioButton x:Name="rbGmHdmiSel" Content="GM HDMI" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
+                    <RadioButton x:Name="rbGmDsiLeftSel" Content="GM DSI (left)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
+                    <RadioButton x:Name="rbGmDsiRightSel" Content="GM DSI (Right)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
                     <RadioButton x:Name="rbTest" Content="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="Hidden"/>
                     <Button x:Name="btnConnect" Content="CONNECT" Width="75" VerticalAlignment="Center" Margin="25,5,0,5" HorizontalAlignment="Center" Click="btnConnect_Click" Height="25"/>
                 </WrapPanel>

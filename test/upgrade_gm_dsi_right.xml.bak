@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <list>
 	<config>GM FPD-Link4 (DSI 2CH)</config>
-	<base_dir>~/Desktop/</base_dir>
+	<base_dir>/home/mik21/Desktop/</base_dir>
 	
 	<pre_cmds>
-  	<cmd>cd ~/Desktop</cmd>
+  	<cmd>cd /home/mik21/Desktop</cmd>
 	</pre_cmds>
 	<pre_cmds>
   	<cmd>rm -r libvlc</cmd>
@@ -13,10 +13,10 @@
   	<cmd>rm -r libgtk</cmd>
 	</pre_cmds>
 	<pre_cmds>
-  	<cmd>PID_APP=`pidof ~/Desktop/DISP_CTRL`</cmd>
+  	<cmd>PID_APP=`pidof /home/mik21/Desktop/DISP_CTRL`</cmd>
 	</pre_cmds>
 	<pre_cmds>
-  	<cmd>PID_UPGRADE=`pidof ~/Desktop/RemoteUpgrade`</cmd>
+  	<cmd>PID_UPGRADE=`pidof /home/mik21/Desktop/RemoteUpgrade`</cmd>
 	</pre_cmds>
 	<pre_cmds>
   	<cmd>kill $PID_UPGRADE</cmd>
@@ -30,8 +30,12 @@
 	  <size>85504000</size>
 	</libs>
 	<libs>
+		<!--
 	  <lib>DISP_2CH_CTRL_3_9_10</lib>
 	  <size>1054496</size>
+	  -->
+	  <lib>DISP_2CH_CTRL_8_9_10</lib>
+	  <size>1054400 </size>
 	</libs>
 	<libs>
 	  <lib>RemoteUpgrade_2_1_1</lib>
@@ -41,31 +45,46 @@
 	  <lib>LICENSE.GPL3</lib>
 	  <size>36174</size>
 	</libs>
+	<libs>
+	  <lib>interfaces_193</lib>
+	  <size>269</size>
+	</libs>
 	
 	<cmds>  	<cmd>ll</cmd>	</cmds>
-	<cmds>  	<cmd>mv DISP_2CH_CTRL_3_9_10 DISP_CTRL</cmd>	</cmds>
+	<cmds>  	<cmd>mv DISP_2CH_CTRL_8_9_10 DISP_CTRL</cmd>	</cmds>
 	<cmds>  	<cmd>chmod 766 DISP_CTRL</cmd>	</cmds>
 	<cmds>  	<cmd>mv RemoteUpgrade_2_1_1 RemoteUpgrade</cmd>	</cmds>
 	<cmds>  	<cmd>chmod 766 RemoteUpgrade</cmd>	</cmds>
 	<cmds>  	<cmd>tar -xf libvlc4.tar</cmd>	</cmds>
 	<cmds> 		<cmd>rm libvlc4.tar</cmd> 			</cmds>
 	<cmds>  	<cmd>ll</cmd>	</cmds>
-	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 ~/Desktop/RemoteUpgrade'</cmd>	</cmds>
+	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 /home/mik21/Desktop/RemoteUpgrade'</cmd>	</cmds>
+	<cmds>  	<cmd>sudo mv interfaces_193 /etc/network/interfaces</cmd>	<sudo></sudo></cmds>
 	
 	<check>
 		<type>1</type>
 	  <file>LICENSE.GPL3</file>
+	  <dir>/home/mik21/Desktop</dir>
 	  <size>36174</size>
 	</check>
 	<check>
 		<type>1</type>
 	  <file>DISP_CTRL</file>
-	  <size>1054496</size>
+	  <dir>/home/mik21/Desktop</dir>
+	  <!--<size>1054496</size>-->
+	  <size>1054400 </size>
 	</check>
 	<check>
 		<type>1</type>
 	  <file>RemoteUpgrade</file>
+	  <dir>/home/mik21/Desktop</dir>
 	  <size>134928</size>
+	</check>
+	<check>
+		<type>1</type>
+	  <file>interfaces</file>
+	  <dir>/etc/network</dir>
+	  <size>269</size>
 	</check>
 	<check>
 		<type>5</type>
