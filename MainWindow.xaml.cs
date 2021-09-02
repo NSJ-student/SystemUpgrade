@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define USE_SSH_RECV_THREAD
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,7 +52,9 @@ namespace SystemUpgrade
         List<UserCommand> listSshCommand_Pre;
         List<UserCommand> listSshCommand;
         List<UserCommand> listSshCheck;
+#if USE_SSH_RECV_THREAD
         Thread sshRecvthread;
+#endif
         Thread sshPreCommandthread;
         Thread sshCommandthread;
         Thread sshCheckThread;
@@ -72,7 +76,7 @@ namespace SystemUpgrade
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "roqkfdmfwkfgkwk!"));
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "nvidia"));
             listConnInfo.Add(new UserConnInfo("192.168.20.193", "mik21", "nvidia"));
-            listConnInfo.Add(new UserConnInfo("192.168.0.100",  "sujin", "sujin1234"));
+            listConnInfo.Add(new UserConnInfo("192.168.0.100",  "pi", "sujin1234"));
 
             listTxRxFile = new List<UserTxRxInfo>();
             listLocalFile.ItemsSource = listTxRxFile;
@@ -165,11 +169,13 @@ namespace SystemUpgrade
                 uploadThread.Abort();
             }
 
+#if USE_SSH_RECV_THREAD
             // stop SSH
             if ((sshRecvthread != null) && (sshRecvthread.IsAlive))
             {
                 sshRecvthread.Abort();
             }
+#endif
             if ((sshPreCommandthread != null) && (sshPreCommandthread.IsAlive))
             {
                 sshPreCommandthread.Abort();
@@ -567,6 +573,7 @@ namespace SystemUpgrade
                     throw new Exception("sftp connect failed");
                 }
 
+                m_sftpClient.ErrorOccurred += sftp_Error;
                 Dispatcher.Invoke(delegate () {
                     if(m_sftpClient.Exists(m_sftpClient.WorkingDirectory + "/Desktop"))
                     {
@@ -582,8 +589,9 @@ namespace SystemUpgrade
                     throw new Exception("ssh connect failed");
                 }
                 m_sshShell = m_sshCommand.CreateShellStream("vt100", 80, 60, 800, 600, 65536);
-
-                if((sshRecvthread != null) && (sshRecvthread.IsAlive))
+                m_sshShell.ErrorOccurred += sshShell_Error;
+#if USE_SSH_RECV_THREAD
+                if ((sshRecvthread != null) && (sshRecvthread.IsAlive))
                 {
                     updateProgressLog("connect: ssh recv thread working", "Red");
                     Dispatcher.Invoke(new Action(delegate () { StartStopWait(false); }));
@@ -592,7 +600,9 @@ namespace SystemUpgrade
                 sshRecvthread = new Thread(() => recvCommSSHData());
                 sshRecvthread.IsBackground = true;
                 sshRecvthread.Start();
-
+#else
+                m_sshShell.DataReceived += sshShell_Recv;
+#endif
                 Dispatcher.Invoke(new Action(delegate () { StateConnected(); }));
               
                 Dispatcher.Invoke(new Action(delegate () { StartStopWait(false); }));
@@ -612,52 +622,44 @@ namespace SystemUpgrade
             {
                 try
                 {
-                    if ((m_sshCommand != null) && (m_sshShell != null) && (m_sftpClient != null))
-                    {
-                        if (!m_sshCommand.IsConnected)
-                        {
-                            throw new Exception("ssh disconnected");
-                        }
-
-                        if (!m_sftpClient.IsConnected)
-                        {
-                            throw new Exception("sftp disconnected");
-                        }
-
-                        while (m_sshShell.DataAvailable)
-                        {
-                            string strData = m_sshShell.Read();
-                            string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
-                            string pattern = String.Format("[sudo] password for {0}: ", currentConnInfo.UserName);
-                            Dispatcher.Invoke(delegate () {
-//                                string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + str + Environment.NewLine;
-                                if(str == "\b")
-                                {
-                                    if (txtSshLog.Text.Length > 1)
-                                    {
-                                        txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - 1);
-                                        txtSshLog.CaretIndex = txtSshLog.Text.Length;
-                                        txtSshLog.ScrollToEnd();
-                                    }
-                                }
-                                else
-                                {
-                                    txtSshLog.AppendText(str);
-                                    txtSshLog.ScrollToEnd();
-                                }
-                            });
-
-                            if (str.Contains(pattern))
-                            {
-                                m_sshShell.WriteLine(currentConnInfo.Password);
-                            }
-                        }
-                        Thread.Sleep(1);
-                    }
-                    else
+                    if ((m_sshCommand == null) || (m_sshShell == null) || (m_sftpClient == null))
                     {
                         throw new Exception("ssh instance null");
                     }
+                    if (!m_sshCommand.IsConnected)
+                    {
+                        throw new Exception("ssh disconnected");
+                    }
+                        
+                    while (m_sshShell.DataAvailable)
+                    {
+                        string strData = m_sshShell.Read();
+                        string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
+
+                        string pattern = String.Format("[sudo] password for {0}: ", currentConnInfo.UserName);
+                        if (str.Contains(pattern))
+                        {
+                            m_sshShell.WriteLine(currentConnInfo.Password);
+                        }
+
+                        Dispatcher.Invoke(delegate () {
+                            if (str.Contains("\b"))
+                            {
+                                if (txtSshLog.Text.Length > 1)
+                                {
+                                    txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - 1);
+                                    txtSshLog.CaretIndex = txtSshLog.Text.Length;
+                                    txtSshLog.ScrollToEnd();
+                                }
+                            }
+                            else
+                            {
+                                txtSshLog.AppendText(str);
+                                txtSshLog.ScrollToEnd();
+                            }
+                        });
+                    }
+                    Thread.Sleep(1);
                 }
                 catch (Exception ex)
                 {
@@ -668,6 +670,7 @@ namespace SystemUpgrade
                             StateDisconnected_ClearAll();
                         }));
                     }
+                    return;
                 }
             }
         }
@@ -847,14 +850,43 @@ namespace SystemUpgrade
                             throw new Exception("ssh disconnected");
                         }
 
-                        m_sshShell.WriteLine(cmd.Cmd);
-                        if (cmd.CmdDescription != "")
+                        if (cmd.IsSudo)
                         {
-                            updateProgressLog(String.Format("    {0}", cmd.CmdDescription), "Black");
+                            m_sshShell.WriteLine(cmd.Cmd);
+
+                            updateProgressLog(String.Format("    cmd: [{0}/{1}] {2}",
+                                count, listSshCommand.Count, cmd.CmdDescription), "Black");
                         }
                         else
                         {
-                            updateProgressLog(String.Format("    cmd: {0}/{1}", count, listSshCommand.Count), "Black");
+                            var command = m_sshCommand.CreateCommand(cmd.Cmd);
+                            command.Execute();
+                            if(command.ExitStatus != 0)
+                            {
+                                if(cmd.CmdDescription == "")
+                                {
+                                    cmd.CmdDescription = cmd.Cmd;
+                                }
+                                updateProgressLog(String.Format("    cmd: [{0}/{1}] {2}",
+                                    count, listSshCommand.Count, cmd.CmdDescription), "Orange");
+
+                                char token = '\n';
+                                if (command.Error.Contains("\r")) token = '\r';
+
+                                string[] errors = command.Error.Split(token);
+                                foreach(string error in errors)
+                                {
+                                    if(error != "")
+                                    {
+                                        updateProgressLog(String.Format("         => {0}", error), "Red");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                updateProgressLog(String.Format("    cmd: [{0}/{1}] {2}",
+                                    count, listSshCommand.Count, cmd.CmdDescription), "Black");
+                            }
                         }
 
                         if (cmd.IsSudo)
@@ -978,8 +1010,37 @@ namespace SystemUpgrade
                             {
                                 updateProgressLog(String.Format("    cmd: {0}", cmd.CmdDescription), "Red");
                                 updateProgressLog(String.Format("      exitStatus: {0}", command.ExitStatus), "Red");
-                                if (command.Error != "") updateProgressLog(String.Format("      error: {0}", command.Error), "Red");
-                                if (result!="") updateProgressLog(String.Format("      result: {0}",  result), "Red");
+                                if (command.ExitStatus != 0)
+                                {
+                                    if (command.Error != "")
+                                    {
+                                        char token = '\n';
+                                        if (command.Error.Contains("\r")) token = '\r';
+
+                                        string[] errors = command.Error.Split(token);
+                                        foreach (string error in errors)
+                                        {
+                                            if (error != "")
+                                            {
+                                                updateProgressLog(String.Format("          error => {0}", error), "Red");
+                                            }
+                                        }
+                                    }
+                                    if (result != "")
+                                    {
+                                        char token = '\n';
+                                        if (result.Contains("\r")) token = '\r';
+
+                                        string[] results = result.Split(token);
+                                        foreach (string res in results)
+                                        {
+                                            if (res != "")
+                                            {
+                                                updateProgressLog(String.Format("          result=> {0}", res), "Red");
+                                            }
+                                        }
+                                    }
+                                }
                                 failed++;
                             }
                         }
@@ -1023,6 +1084,87 @@ namespace SystemUpgrade
                     Dispatcher.Invoke(new Action(delegate () {
                         imageResult.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove.png"));
                         StateActive();
+                    }));
+                }
+            }
+        }
+
+        /**************************/
+        //       Event
+        /**************************/
+        private void sftp_Error(object sender, Renci.SshNet.Common.ExceptionEventArgs e)
+        {
+            updateProgressLog("sftp_error: " + e.Exception.Message, "Red");
+            if (!m_sshCommand.IsConnected)
+            {
+                Dispatcher.Invoke(new Action(delegate () {
+                    StateDisconnected_ClearAll();
+                }));
+            }
+        }
+
+        private void sshShell_Error(object sender, Renci.SshNet.Common.ExceptionEventArgs e)
+        {
+            updateProgressLog("ssh_error: " + e.Exception.Message, "Red");
+            if (!m_sshCommand.IsConnected)
+            {
+                Dispatcher.Invoke(new Action(delegate () {
+                    StateDisconnected_ClearAll();
+                }));
+            }
+        }
+
+        private void sshShell_Recv(object sender, Renci.SshNet.Common.ShellDataEventArgs e)
+        {
+            try
+            {
+                if ((m_sshCommand == null) || (m_sshShell == null) || (m_sftpClient == null))
+                {
+                    throw new Exception("ssh instance null");
+                }
+
+                if (!m_sshCommand.IsConnected)
+                {
+                    throw new Exception("ssh disconnected");
+                }
+
+                while (m_sshShell.DataAvailable)
+                {
+                    string strData = m_sshShell.Read();
+                    string str = new Regex(@"\x1B\[[^@-~]*[@-~]").Replace(strData, "");
+
+                    string pattern = String.Format("[sudo] password for {0}: ", currentConnInfo.UserName);
+                    if (str.Contains(pattern))
+                    {
+                        m_sshShell.WriteLine(currentConnInfo.Password);
+                    }
+
+                    Dispatcher.Invoke(delegate () {
+//                                string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + str + Environment.NewLine;
+                        if (str.Contains("\b"))
+                        {
+                            if (txtSshLog.Text.Length > 1)
+                            {
+                                txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - 1);
+                                txtSshLog.CaretIndex = txtSshLog.Text.Length;
+                                txtSshLog.ScrollToEnd();
+                            }
+                        }
+                        else
+                        {
+                            txtSshLog.AppendText(str);
+                            txtSshLog.ScrollToEnd();
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                updateProgressLog("ssh_recv: " + ex.Message, "Red");
+                if (!m_sshCommand.IsConnected)
+                {
+                    Dispatcher.Invoke(new Action(delegate () {
+                        StateDisconnected_ClearAll();
                     }));
                 }
             }
@@ -1216,7 +1358,20 @@ namespace SystemUpgrade
                     }
                     if (file_item.is_directory)
                     {
-                        m_sftpClient.DeleteDirectory(remoteDirPath + "/" + file_item.Name);
+                        if ((m_sshCommand!=null)&&(m_sshCommand.IsConnected))
+                        {
+                            string delete_cmd = String.Format("rm -r {0}", remoteDirPath + "/" + file_item.Name);
+                            var command = m_sshCommand.CreateCommand(delete_cmd);
+                            command.Execute();
+                            if (command.ExitStatus != 0)
+                            {
+                                throw new Exception(command.Error);
+                            }
+                        }
+                        else
+                        {
+                            m_sftpClient.DeleteDirectory(remoteDirPath + "/" + file_item.Name);
+                        }
                     }
                     else
                     {
