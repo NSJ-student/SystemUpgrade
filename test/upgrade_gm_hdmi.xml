@@ -57,7 +57,7 @@
 	<cmds>  	<cmd>chmod 766 DISP_CTRL</cmd>	</cmds>
 	<cmds>  	<cmd>mv RemoteUpgrade_2_1_1 RemoteUpgrade</cmd>	</cmds>
 	<cmds>  	<cmd>chmod 766 RemoteUpgrade</cmd>	</cmds>
-	<cmds>  	<cmd>tar -xf libvlc4.tar</cmd>	</cmds>
+	<cmds>  	<cmd>tar -xf /home/mik21/Desktop/libvlc4.tar -C /home/mik21/Desktop</cmd>	</cmds>
 	<cmds> 		<cmd>rm libvlc4.tar</cmd> 			</cmds>
 	<cmds>  	<cmd>ll</cmd>	</cmds>
 	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 ~/Desktop/RemoteUpgrade'</cmd>	</cmds>

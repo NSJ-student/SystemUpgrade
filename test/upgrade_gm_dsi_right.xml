@@ -32,10 +32,10 @@
 	<libs>
 		<!--
 	  <lib>DISP_2CH_CTRL_3_9_10</lib>
-	  <size>1054496</size>
+	  <size>1058704</size>
 	  -->
 	  <lib>DISP_2CH_CTRL_8_9_10</lib>
-	  <size>1054400 </size>
+	  <size>1064752 </size>
 	</libs>
 	<libs>
 	  <lib>RemoteUpgrade_2_1_1</lib>
@@ -55,7 +55,7 @@
 	<cmds>  	<cmd>chmod 766 DISP_CTRL</cmd>	</cmds>
 	<cmds>  	<cmd>mv RemoteUpgrade_2_1_1 RemoteUpgrade</cmd>	</cmds>
 	<cmds>  	<cmd>chmod 766 RemoteUpgrade</cmd>	</cmds>
-	<cmds>  	<cmd>tar -xf libvlc4.tar</cmd>	</cmds>
+	<cmds>  	<cmd>tar -xf /home/mik21/Desktop/libvlc4.tar -C /home/mik21/Desktop</cmd>	</cmds>
 	<cmds> 		<cmd>rm libvlc4.tar</cmd> 			</cmds>
 	<cmds>  	<cmd>ll</cmd>	</cmds>
 	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 /home/mik21/Desktop/RemoteUpgrade'</cmd>	</cmds>
@@ -71,8 +71,8 @@
 		<type>1</type>
 	  <file>DISP_CTRL</file>
 	  <dir>/home/mik21/Desktop</dir>
-	  <!--<size>1054496</size>-->
-	  <size>1054400 </size>
+	  <!--<size>1058704</size>-->
+	  <size>1064752 </size>
 	</check>
 	<check>
 		<type>1</type>
