@@ -643,14 +643,12 @@ namespace SystemUpgrade
                         }
 
                         Dispatcher.Invoke(delegate () {
-                            if (str.Contains("\b"))
+                            int backspace_count = str.Count(f => f == '\b');
+                            if (backspace_count > 0)
                             {
-                                if (txtSshLog.Text.Length > 1)
-                                {
-                                    txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - 1);
-                                    txtSshLog.CaretIndex = txtSshLog.Text.Length;
-                                    txtSshLog.ScrollToEnd();
-                                }
+                                txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - backspace_count, backspace_count);
+                                txtSshLog.CaretIndex = txtSshLog.Text.Length;
+                                txtSshLog.ScrollToEnd();
                             }
                             else
                             {
@@ -870,10 +868,15 @@ namespace SystemUpgrade
                                 updateProgressLog(String.Format("    cmd: [{0}/{1}] {2}",
                                     count, listSshCommand.Count, cmd.CmdDescription), "Orange");
 
+                                string error_str = command.Error;
                                 char token = '\n';
-                                if (command.Error.Contains("\r")) token = '\r';
+                                if (command.Error.Contains("\r"))
+                                {
+                                    token = '\r';
+                                    error_str = command.Error.Replace("\n", "");
+                                }
 
-                                string[] errors = command.Error.Split(token);
+                                string[] errors = error_str.Split(token);
                                 foreach(string error in errors)
                                 {
                                     if(error != "")
@@ -1014,10 +1017,15 @@ namespace SystemUpgrade
                                 {
                                     if (command.Error != "")
                                     {
+                                        string error_str = command.Error;
                                         char token = '\n';
-                                        if (command.Error.Contains("\r")) token = '\r';
+                                        if (command.Error.Contains("\r"))
+                                        {
+                                            token = '\r';
+                                            error_str = command.Error.Replace("\n", "");
+                                        }
 
-                                        string[] errors = command.Error.Split(token);
+                                        string[] errors = error_str.Split(token);
                                         foreach (string error in errors)
                                         {
                                             if (error != "")
@@ -1141,14 +1149,12 @@ namespace SystemUpgrade
 
                     Dispatcher.Invoke(delegate () {
 //                                string new_text = DateTime.Now.ToString("[hh:mm:ss:fff] ") + str + Environment.NewLine;
-                        if (str.Contains("\b"))
+                        int backspace_count = str.Count(f => f == '\b');
+                        if (backspace_count > 0)
                         {
-                            if (txtSshLog.Text.Length > 1)
-                            {
-                                txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - 1);
-                                txtSshLog.CaretIndex = txtSshLog.Text.Length;
-                                txtSshLog.ScrollToEnd();
-                            }
+                            txtSshLog.Text = txtSshLog.Text.Remove(txtSshLog.Text.Length - backspace_count, backspace_count);
+                            txtSshLog.CaretIndex = txtSshLog.Text.Length;
+                            txtSshLog.ScrollToEnd();
                         }
                         else
                         {
