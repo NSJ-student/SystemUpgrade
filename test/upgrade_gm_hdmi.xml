@@ -4,7 +4,7 @@
 	<base_dir>/home/mik21/Desktop/</base_dir>
 	
 	<pre_cmds>
-  	<cmd>cd ~/Desktop</cmd>
+  	<cmd>cd /home/mik21/Desktop</cmd>
 	</pre_cmds>
 	<pre_cmds>
   	<cmd>rm -r libvlc</cmd>
@@ -13,10 +13,10 @@
   	<cmd>rm -r libgtk</cmd>
 	</pre_cmds>
 	<pre_cmds>
-  	<cmd>PID_APP=`pidof ~/Desktop/DISP_CTRL`</cmd>
+  	<cmd>PID_APP=`pidof /home/mik21/Desktop/DISP_CTRL`</cmd>
 	</pre_cmds>
 	<pre_cmds>
-  	<cmd>PID_UPGRADE=`pidof ~/Desktop/RemoteUpgrade`</cmd>
+  	<cmd>PID_UPGRADE=`pidof /home/mik21/Desktop/RemoteUpgrade`</cmd>
 	</pre_cmds>
 	<pre_cmds>
   	<cmd>kill $PID_UPGRADE</cmd>
@@ -53,14 +53,14 @@
 	</libs>
 	
 	<cmds>  	<cmd>ll</cmd>	</cmds>
-	<cmds>  	<cmd>mv DISP_CTRL_3_1_0 DISP_CTRL</cmd>	</cmds>
-	<cmds>  	<cmd>chmod 766 DISP_CTRL</cmd>	</cmds>
-	<cmds>  	<cmd>mv RemoteUpgrade_2_1_1 RemoteUpgrade</cmd>	</cmds>
-	<cmds>  	<cmd>chmod 766 RemoteUpgrade</cmd>	</cmds>
+	<cmds>  	<cmd>mv /home/mik21/Desktop/DISP_CTRL_3_1_0 /home/mik21/Desktop/DISP_CTRL</cmd>	</cmds>
+	<cmds>  	<cmd>chmod 766 /home/mik21/Desktop/DISP_CTRL</cmd>	</cmds>
+	<cmds>  	<cmd>mv /home/mik21/Desktop/RemoteUpgrade_2_1_1 /home/mik21/Desktop/RemoteUpgrade</cmd>	</cmds>
+	<cmds>  	<cmd>chmod 766 /home/mik21/Desktop/RemoteUpgrade</cmd>	</cmds>
 	<cmds>  	<cmd>tar -xf /home/mik21/Desktop/libvlc4.tar -C /home/mik21/Desktop</cmd>	</cmds>
-	<cmds> 		<cmd>rm libvlc4.tar</cmd> 			</cmds>
+	<cmds> 		<cmd>rm /home/mik21/Desktop/libvlc4.tar</cmd> 			</cmds>
 	<cmds>  	<cmd>ll</cmd>	</cmds>
-	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 ~/Desktop/RemoteUpgrade'</cmd>	</cmds>
+	<cmds>  	<cmd>setsid sh -c 'DISPLAY=:0 /home/mik21/Desktop/RemoteUpgrade'</cmd>	</cmds>
 	
 	<check>
 		<type>1</type>
@@ -80,13 +80,13 @@
 	<check>
 		<type>5</type>
 		<cmd_desc>RemoteUpgrade library check</cmd_desc>
-	  <cmd>ldd ~/Desktop/RemoteUpgrade | grep "not"</cmd>
+	  <cmd>ldd /home/mik21/Desktop/RemoteUpgrade | grep "not"</cmd>
 	  <exit_status>1</exit_status>
 	</check>
 	<check>
 		<type>5</type>
 		<cmd_desc>DISP_CTRL library check</cmd_desc>
-	  <cmd>ldd ~/Desktop/DISP_CTRL | grep "not"</cmd>
+	  <cmd>ldd /home/mik21/Desktop/DISP_CTRL | grep "not"</cmd>
 	  <exit_status>1</exit_status>
 	</check>
 </list>
