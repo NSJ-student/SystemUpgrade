@@ -15,7 +15,8 @@
 4. Check를 누르면 설정파일의 내용에 따라 장비의 설정을 Check
 옵션: Ctrl+G를 누르면 debug 창이 활성화되며 장비의 파일시스템을 확인하고 사용자가 원하는 SSH 명령을 실행할 수 있음
     
-# UI
+# Load 버튼을 누른 후 UI
 ![SystemUpgrade](https://user-images.githubusercontent.com/28644565/136670894-fc1ce0d5-cca2-474a-bef1-f45ea9a921b5.PNG)
 
+# Upgrade를 실행한 후 UI + debug 창이 활성화된 모습
 ![SystemUpgrade2](https://user-images.githubusercontent.com/28644565/136670895-e7b400c6-7f22-48c6-a37c-0a8df3054ba4.PNG)
