@@ -5,8 +5,8 @@
 개발 언어: C# WPF
 
 목적:
-    - Jetson TX2 system upgrade program를 위한 프로그램
-    - 원격으로 파일을 전송(SFTP)하고 기존의 실행프로그램을 삭제, 복사한 후 재시작(SSH)
+1. Jetson TX2 system upgrade program를 위한 프로그램
+2. 원격으로 파일을 전송(SFTP)하고 기존의 실행프로그램을 삭제, 복사한 후 재시작(SSH)
  
 사용방법:
 1. 대상과 ethernet 연결 (상단의 connect 버튼)
