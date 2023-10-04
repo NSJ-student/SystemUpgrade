@@ -74,6 +74,7 @@ namespace SystemUpgrade
 
             listConnInfo = new List<UserConnInfo>();
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "roqkfdmfwkfgkwk!"));
+            listConnInfo.Add(new UserConnInfo("192.168.20.193", "mik21", "roqkfdmfwkfgkwk!"));
             listConnInfo.Add(new UserConnInfo("192.168.20.192", "mik21", "nvidia"));
             listConnInfo.Add(new UserConnInfo("192.168.20.193", "mik21", "nvidia"));
             listConnInfo.Add(new UserConnInfo("192.168.0.100",  "pi", "sujin1234"));
@@ -106,10 +107,11 @@ namespace SystemUpgrade
             btnCheckUpgrade.IsEnabled = false;
             btnUpgradeDatas.IsEnabled = false;
 
-            rbGmDsiLeftSel.IsEnabled = false;
-            rbGmDsiRightSel.IsEnabled = false;
-            rbGmHdmiSel.IsEnabled = false;
-            rbTest.IsEnabled = false;
+            rbGmDsi192.IsEnabled = false;
+            rbGmDsi193.IsEnabled = false;
+            rbGmHdmiSel192.IsEnabled = false;
+            rbGmHdmiSel193.IsEnabled = false;
+ //           rbTest.IsEnabled = false;
 
             btnConnect.Content = "Close";
 
@@ -134,10 +136,11 @@ namespace SystemUpgrade
             listSshCheck.Clear();
 
             // control UI
-            rbGmDsiLeftSel.IsEnabled = true;
-            rbGmDsiRightSel.IsEnabled = true;
-            rbGmHdmiSel.IsEnabled = true;
-            rbTest.IsEnabled = true;
+            rbGmDsi192.IsEnabled = true;
+            rbGmDsi193.IsEnabled = true;
+            rbGmHdmiSel192.IsEnabled = true;
+            rbGmHdmiSel193.IsEnabled = true;
+//            rbTest.IsEnabled = true;
 
             stackButtons.IsEnabled = false;
             btnConnect.Content = "Connect";
@@ -458,9 +461,11 @@ namespace SystemUpgrade
         {
             UserConnInfo info = listConnInfo.ElementAt(0);
 
-            if (rbGmDsiLeftSel.IsChecked == true) info = listConnInfo.ElementAt(1);
-            if (rbGmDsiRightSel.IsChecked == true) info = listConnInfo.ElementAt(2);
-            if (rbTest.IsChecked == true) info = listConnInfo.ElementAt(3);
+            if (rbGmHdmiSel192.IsChecked == true) info = listConnInfo.ElementAt(0);
+            if (rbGmHdmiSel193.IsChecked == true) info = listConnInfo.ElementAt(1);
+            if (rbGmDsi192.IsChecked == true) info = listConnInfo.ElementAt(2);
+            if (rbGmDsi193.IsChecked == true) info = listConnInfo.ElementAt(3);
+//            if (rbTest.IsChecked == true) info = listConnInfo.ElementAt(4);
 
             currentConnInfo = info;
             return info;
@@ -1497,12 +1502,12 @@ namespace SystemUpgrade
             {
                 expenderDebug.IsExpanded = false;
                 expenderDebug.Visibility = Visibility.Hidden;
-                rbTest.Visibility = Visibility.Hidden;
+ //               rbTest.Visibility = Visibility.Hidden;
             }
             else
             {
                 expenderDebug.Visibility = Visibility.Visible;
-                rbTest.Visibility = Visibility.Visible;
+//                rbTest.Visibility = Visibility.Visible;
             }
             mainWindow.Focus();
         }
