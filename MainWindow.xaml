@@ -55,10 +55,12 @@
                     <RowDefinition Height="40*"/>
                 </Grid.RowDefinitions>
                 <WrapPanel Orientation="Horizontal" Margin="30,10,30,0" Grid.ColumnSpan="2">
-                    <RadioButton x:Name="rbGmHdmiSel192" Content="K-6408GT eLCV(192)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" IsChecked="True"/>
-                    <RadioButton x:Name="rbGmHdmiSel193" Content="K-6408GT eLCV(193)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" />
-                    <RadioButton x:Name="rbGmDsi192" Content="K-6402GP(192)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
-                    <RadioButton x:Name="rbGmDsi193" Content="K-6402GP(193)" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
+                    <Label Content="IP: " VerticalAlignment="Center" Margin="0,0,0,0" HorizontalAlignment="Center" FontWeight="Bold"/>
+                    <TextBox x:Name="txtRemoteIp" Text="192.168.21.114" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center"/>
+                    <Label Content="User Name: " VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" FontWeight="Bold"/>
+                    <TextBox x:Name="txtUserName" Text="mik21" VerticalAlignment="Center" Margin="0,0,0,0" HorizontalAlignment="Center"/>
+                    <Label Content="PASSWORD: " VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center" FontWeight="Bold"/>
+                    <PasswordBox x:Name="txtPassword" Password="dev3" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     <Button x:Name="btnConnect" Content="CONNECT" Width="75" VerticalAlignment="Center" Margin="25,5,0,5" HorizontalAlignment="Center" Click="btnConnect_Click" Height="25"/>
                 </WrapPanel>
                 <ListView x:Name="listLocalFile" Grid.Row="5" Margin="30,5,0,0">

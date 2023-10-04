@@ -107,12 +107,6 @@ namespace SystemUpgrade
             btnCheckUpgrade.IsEnabled = false;
             btnUpgradeDatas.IsEnabled = false;
 
-            rbGmDsi192.IsEnabled = false;
-            rbGmDsi193.IsEnabled = false;
-            rbGmHdmiSel192.IsEnabled = false;
-            rbGmHdmiSel193.IsEnabled = false;
- //           rbTest.IsEnabled = false;
-
             btnConnect.Content = "Close";
 
             updateProgressLog_UI("ssh/sftp connected", "Blue");
@@ -136,11 +130,6 @@ namespace SystemUpgrade
             listSshCheck.Clear();
 
             // control UI
-            rbGmDsi192.IsEnabled = true;
-            rbGmDsi193.IsEnabled = true;
-            rbGmHdmiSel192.IsEnabled = true;
-            rbGmHdmiSel193.IsEnabled = true;
-//            rbTest.IsEnabled = true;
 
             stackButtons.IsEnabled = false;
             btnConnect.Content = "Connect";
@@ -459,13 +448,7 @@ namespace SystemUpgrade
 
         private UserConnInfo get_current_conn()
         {
-            UserConnInfo info = listConnInfo.ElementAt(0);
-
-            if (rbGmHdmiSel192.IsChecked == true) info = listConnInfo.ElementAt(0);
-            if (rbGmHdmiSel193.IsChecked == true) info = listConnInfo.ElementAt(1);
-            if (rbGmDsi192.IsChecked == true) info = listConnInfo.ElementAt(2);
-            if (rbGmDsi193.IsChecked == true) info = listConnInfo.ElementAt(3);
-//            if (rbTest.IsChecked == true) info = listConnInfo.ElementAt(4);
+            UserConnInfo info = new UserConnInfo(txtRemoteIp.Text, txtUserName.Text, txtPassword.Password);
 
             currentConnInfo = info;
             return info;
