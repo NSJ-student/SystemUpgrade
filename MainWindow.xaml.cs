@@ -274,11 +274,16 @@ namespace SystemUpgrade
                         string local_path = local_dir + "/" + file_name;
                         string remote_path = m_sftpClient.WorkingDirectory + "/"+ file_name;
                         
-                        int expected_size = 0;
+                        long expected_size = 0;
                         element = xList.Element("size");
                         if (element != null)
                         {
                             expected_size = Convert.ToInt32(element.Value);
+                        }
+                        else
+                        {
+                            FileInfo file = new FileInfo(local_path);
+                            expected_size = file.Length;
                         }
 
                         UserTxRxInfo info = new UserTxRxInfo(local_path, remote_path, expected_size);
@@ -378,10 +383,18 @@ namespace SystemUpgrade
                             {
                                 continue;
                             }
+
+                            long expected_size = 0;
                             XElement size_element = xList.Element("size");
-                            if (size_element == null)
+                            if (size_element != null)
                             {
-                                continue;
+                                expected_size = Convert.ToInt32(size_element.Value);
+                            }
+                            else
+                            {
+                                string local_path = local_dir + "/" + file_element.Value;
+                                FileInfo file = new FileInfo(local_path);
+                                expected_size = file.Length;
                             }
 
                             string remote_path = "";
@@ -395,7 +408,7 @@ namespace SystemUpgrade
                                 remote_path = dir_element.Value + "/" + file_element.Value;
                             }
 
-                            listSshCheck.Add(new UserCommand(remote_path, Convert.ToInt32(size_element.Value)));
+                            listSshCheck.Add(new UserCommand(remote_path, expected_size));
                         }
                         else if ((type == (int)UserCommand.CommandType.CMD_PASS_EXIT_ZERO) || 
                                 (type == (int)UserCommand.CommandType.CMD_PASS_EXIT_POSITIVE) ||
@@ -1538,7 +1551,7 @@ namespace SystemUpgrade
             }
             CmdDescription = description;
         }
-        public UserCommand(string remote_file, int file_size)
+        public UserCommand(string remote_file, long file_size)
         {
             RemotePath = remote_file;
             FileSize = file_size;
@@ -1549,7 +1562,7 @@ namespace SystemUpgrade
         public string Cmd { get; }
         public bool IsSudo { get; }
         public string RemotePath { get; }
-        public int FileSize { get; }
+        public long FileSize { get; }
         public int ExitStatus { get; }
         public string CmdDescription { get; set; }
         public CommandType Type { get; }
@@ -1589,7 +1602,7 @@ namespace SystemUpgrade
     public class UserTxRxInfo : INotifyPropertyChanged
     {
         //  <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
-        public UserTxRxInfo(string local, string remote, int expected_size)
+        public UserTxRxInfo(string local, string remote, long expected_size)
         {
             LocalPath = local;
             RemotePath = remote;
